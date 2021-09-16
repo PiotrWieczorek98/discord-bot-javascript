@@ -1,0 +1,33 @@
+{
+  "name": "discord-js-bot",
+  "version": "1.0.0",
+  "description": "Ah shit here we go again",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PiotrWieczorek98/discord-js-boi-bot.git"
+  },
+  "author": "Piotr Wieczorek",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/PiotrWieczorek98/discord-js-boi-bot/issues"
+  },
+  "homepage": "https://github.com/PiotrWieczorek98/discord-js-boi-bot#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.6.0",
+    "@discordjs/rest": "0.1.0-canary.0",
+    "discord-api-types": "^0.23.1",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/node": "^16.9.1",
+    "eslint": "^7.32.0"
+  }
+}
