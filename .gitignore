@@ -1,10 +1,9 @@
-#Hide env variables
+# Per project
 .env
 config.json
-# Hide blobs
 *.mp3
-
-
+.eslintrc.json
+.vs/
 
 # Logs
 logs

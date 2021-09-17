@@ -2,9 +2,9 @@
   "name": "discord-js-bot",
   "version": "1.0.0",
   "description": "Ah shit here we go again",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "start-bot": "node index.js",
+    "start-bot": "node main.js",
     "deploy-commands": "node deploy-commands.js"
   },
   "repository": {
