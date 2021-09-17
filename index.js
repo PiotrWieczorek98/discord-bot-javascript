@@ -1,6 +1,8 @@
 // Require the necessary discord.js classes
 const { Client, Intents } = require('discord.js');
 const { envs } = require('./config.js');
+// const cloud = require('./helpers/azure-storage.js');
+
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
@@ -27,7 +29,6 @@ client.on('interactionCreate', async interaction => {
 		await interaction.reply('User info.');
 	}
 });
-
 
 // Login to Discord with your client's token
 client.login(envs.TOKEN);
