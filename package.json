@@ -4,9 +4,8 @@
   "description": "Ah shit here we go again",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "deploy": "node deploy-commands.js"
+    "start-bot": "node index.js",
+    "deploy-commands": "node deploy-commands.js"
   },
   "repository": {
     "type": "git",
@@ -19,8 +18,9 @@
   },
   "homepage": "https://github.com/PiotrWieczorek98/discord-js-boi-bot#readme",
   "dependencies": {
+    "@azure/storage-blob": "^12.8.0",
     "@discordjs/builders": "^0.6.0",
-    "@discordjs/rest": "0.1.0-canary.0",
+    "@discordjs/rest": "^0.1.0-canary.0",
     "discord-api-types": "^0.23.1",
     "discord.js": "^13.1.0",
     "dotenv": "^10.0.0",

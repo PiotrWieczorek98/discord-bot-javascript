@@ -1,6 +1,11 @@
 #Hide env variables
 .env
 config.json
+# Hide blobs
+*.mp3
+
+
+
 # Logs
 logs
 *.log

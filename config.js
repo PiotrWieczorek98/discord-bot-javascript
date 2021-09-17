@@ -1,10 +1,6 @@
 const dotenv = require('dotenv');
 const _ = require('lodash');
 
-// To import envs:
-// import { NODE_ENV } from './config';
-
-
 const result = dotenv.config();
 let envs;
 
