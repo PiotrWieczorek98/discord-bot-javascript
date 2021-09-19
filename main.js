@@ -3,6 +3,7 @@ const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const Client = require('./helpers/Client.js');
 const Azure = require('./helpers/azure-storage.js');
+const root = require('./helpers/root.js');
 
 // Create a new client instance
 const client = new Client();
@@ -27,7 +28,7 @@ client.once('ready', () => {
 		});
 		// Download all sounds
 		for (const guildId of guilds) {
-			const path = `${__dirname}/sounds/${guildId}`;
+			const path = `${root}/sounds/${guildId}`;
 			if (!fs.existsSync(path)) {
 				fs.mkdirSync(path);
 			}

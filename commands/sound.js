@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { createAudioPlayer, joinVoiceChannel } = require('@discordjs/voice');
 const ClientPlayer = require('../helpers/AudioPlayer.js');
+const root = require('../helpers/root.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -28,7 +29,7 @@ module.exports = {
 		}
 
 		// Add to queue
-		const fullPath = `${__dirname}\\..\\sounds\\${interaction.member.guild.id}\\${soundName}`;
+		const fullPath = `${root}\\sounds\\${interaction.member.guild.id}\\${soundName}`;
 		const sound = {
 			path: fullPath,
 			title: soundName,
