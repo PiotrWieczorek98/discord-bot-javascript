@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start-bot": "node main.js",
-    "deploy-commands": "node helpers/deploy-commands.js"
+    "deploy-dev-commands": "node helpers/deploy-dev-commands.js",
+    "deploy-global-commands": "node helpers/deploy-global-commands.js"
   },
   "repository": {
     "type": "git",

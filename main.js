@@ -2,7 +2,7 @@
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const Client = require('./helpers/Client.js');
-// const cloud = require('./helpers/azure-storage.js');
+const Azure = require('./helpers/azure-storage.js');
 
 // Create a new client instance
 const client = new Client();
@@ -10,18 +10,22 @@ const client = new Client();
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	console.log('Yahalo!');
+	// Fast async function to allow await
+	(async () => {
+		client.soundList = await Azure.listBlobs('mp3');
+		console.log(client.soundList);
+	})();
 });
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
+// Load commands
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
-	// Set a new item in the Collection
-	// With the key as the command name and the value as the exported module
 	client.commands.set(command.data.name, command);
 }
 
-
+// Listen for commands
 client.on('interactionCreate', async interaction => {
 	if (!interaction.isCommand()) return;
 

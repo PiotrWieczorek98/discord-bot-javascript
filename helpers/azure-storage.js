@@ -1,5 +1,5 @@
 const { BlobServiceClient } = require('@azure/storage-blob');
-const { envs } = require('../config.js');
+const { envs } = require('./env-vars.js');
 const fs = require('fs');
 
 // ##############################################################################
@@ -7,6 +7,7 @@ const fs = require('fs');
 // ##############################################################################
 
 class Azure {
+
 	/**
 	 * Upload files to azure storage
 	 * @param {String} containerName
@@ -42,12 +43,17 @@ class Azure {
 	/**
 	 * Download files from azure storage
 	 * @param {String} containerName
-	 * @param {String} path
+	 * @param {String} savePath
 	 * @param {String} blobName
+	 * @param {String} fileName
+	 * @param {String} option
 	 */
-	static async downloadBlob(containerName, path, blobName) {
+	static async downloadBlob(containerName, savePath, blobName, fileName = '', option = '') {
+		if (fileName == '') {
+			fileName = blobName;
+		}
 		// Prevent overwriting
-		if (fs.existsSync(path.concat(blobName))) {
+		if (option != 'overwrite' && fs.existsSync(savePath.concat(fileName))) {
 			console.log(`Blob ${blobName} already downloaded!`);
 			return;
 		}
@@ -60,7 +66,7 @@ class Azure {
 			const containerClient = blobServiceClient.getContainerClient(containerName);
 			// Create a blob client using the local file name as the name for the blob
 			const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-			await blockBlobClient.downloadToFile(path.concat(blobName));
+			await blockBlobClient.downloadToFile(savePath.concat(blobName));
 		}
 		catch (error) {
 			console.log(error);
@@ -102,11 +108,13 @@ class Azure {
 			// Create the BlobServiceClient object which will be used to create a container client
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
 			const containerClient = blobServiceClient.getContainerClient(containerName);
-			const blobList = [];
-			for await (const blob of containerClient.listBlobsFlat()) {
-				blobList.push(blob.name);
-			}
+			const blobList = new Map();
 
+			let i = 1;
+			for await (const blob of containerClient.listBlobsFlat()) {
+				blobList.set(i, blob.name);
+				i += 1;
+			}
 			return blobList;
 		}
 		catch (error) {
@@ -115,4 +123,4 @@ class Azure {
 	}
 }
 
-module.exports.azure = Azure;
+module.exports = Azure;

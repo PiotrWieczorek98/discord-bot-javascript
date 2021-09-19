@@ -1,24 +1,26 @@
+// eslint-disable-next-line no-unused-vars
+const { Util, Interaction } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { Util } = require('discord.js');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
 
-async function play(interaction, song) {
-	const guildQueue = interaction.client.globalQueue.get(interaction.guild.id);
+/**
+ * Play audio from youtube video
+ * @param {Interaction} interaction
+ * @param {*} guildQueue
+ */
+async function play(interaction, guildQueue) {
+	const song = guildQueue.songs[0];
 	if (!song) {
 		guildQueue.voiceChannel.leave();
 		interaction.client.globalQueue.delete(interaction.guild.id);
 		return;
 	}
 
-	const audioPlayer = createAudioPlayer({
-		behaviors: {
-			noSubscriber: NoSubscriberBehavior.Play,
-		},
-	});
 	let resource = createAudioResource(ytdl(guildQueue.songs[0].url));
+	const audioPlayer = guildQueue.player;
 	guildQueue.connection.subscribe(audioPlayer);
 	audioPlayer.play(resource);
 
@@ -46,7 +48,10 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
 		.setDescription('Granie na żądanie')
-		.addStringOption(option => option.setName('url').setDescription('Link to youtube video.').setRequired(true)),
+		.addStringOption(option => option
+			.setName('url')
+			.setDescription('Link to youtube video.')
+			.setRequired(true)),
 	async execute(interaction) {
 		// Check for abnormalities
 		if (!interaction.member.voice) {
@@ -93,13 +98,11 @@ module.exports = {
 				textChannel: interaction.channel,
 				voiceChannel: channel,
 				connection: null,
+				player: createAudioPlayer(),
 				songs: [],
 			};
 			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
 			guildQueue.songs.push(ytSong);
-
-			// Player function
-
 
 			// Call function
 			try {
@@ -109,7 +112,7 @@ module.exports = {
 					adapterCreator: channel.guild.voiceAdapterCreator,
 				});
 				guildQueue.connection = connection;
-				play(interaction, guildQueue.songs[0]);
+				play(interaction, guildQueue);
 			}
 			catch (error) {
 				console.error(`I could not join the voice channel: ${error}`);
