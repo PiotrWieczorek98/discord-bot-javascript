@@ -10,11 +10,38 @@ const client = new Client();
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	console.log('Yahalo!');
-	// Fast async function to allow await
+	if (!fs.existsSync('./sounds')) {
+		fs.mkdirSync('./sounds');
+	}
+
+	// Async function to allow await
 	(async () => {
-		client.soundList = await Azure.listBlobs('mp3');
-		console.log(client.soundList);
+		// Prepare container for all guilds;
+		const guilds = await Azure.listContainers();
+		client.guilds.cache.forEach(guild => {
+			if (!guilds.includes(guild.id)) {
+				(async () => {
+					await Azure.createContainer(guild.id);
+				})();
+			}
+		});
+		// Download all sounds
+		for (const guildId of guilds) {
+			const path = `${__dirname}/sounds/${guildId}`;
+			if (!fs.existsSync(path)) {
+				fs.mkdirSync(path);
+			}
+
+			const guildSoundList = {
+				guildId: guildId,
+				soundList: await Azure.downloadAllBlobs(guildId, path),
+			};
+
+			client.globalSoundList.push(guildSoundList);
+		}
+		console.log(client.globalSoundList);
 	})();
+
 });
 
 

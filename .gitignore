@@ -4,6 +4,7 @@ config.json
 *.mp3
 .eslintrc.json
 .vs/
+sounds/
 
 # Logs
 logs

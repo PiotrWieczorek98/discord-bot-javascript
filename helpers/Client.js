@@ -8,9 +8,24 @@ module.exports = class extends Client {
 			disableMentions: 'everyone',
 			intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_MESSAGES],
 		});
-		// Global queue costists of guilds' id and per-guild queues
+		// globalQueue entry looks like this:
+		// {
+		//  guildId: guild.id,
+		//  guildQueue: {
+		// 		textChannel: interaction.channel,
+		// 		voiceChannel: channel,
+		// 		connection: null,
+		// 		player: createAudioPlayer(),
+		// 		songs: [],
+		// 	};
+		// }
 		this.globalQueue = new Map();
-		this.soundList = new Map();
+		// globalSoundList entry looks like this:
+		// {
+		// 	guildId: guildId,
+		// 	soundList: await Azure.downloadAllBlobs(guildId, path),
+		// };
+		this.globalSoundList = [];
 		this.commands = new Collection();
 	}
 };

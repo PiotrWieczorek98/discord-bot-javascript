@@ -5,7 +5,12 @@ module.exports = {
 		.setName('list')
 		.setDescription('Sounds list'),
 	async execute(interaction) {
-		const soundList = interaction.client.soundList;
+		let soundList = null;
+		for (const entry of interaction.client.globalSoundList) {
+			if (entry.guildId == interaction.guildId) {
+				soundList = entry.soundList;
+			}
+		}
 		await interaction.reply('The Boys proudly presents...\n');
 
 		let message = '```css\n[Sound List:]\n';

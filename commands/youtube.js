@@ -1,48 +1,9 @@
-// eslint-disable-next-line no-unused-vars
-const { Util, Interaction } = require('discord.js');
+const { Util } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, AudioPlayerStatus } = require('@discordjs/voice');
-const ytdl = require('ytdl-core');
+const { createAudioPlayer, joinVoiceChannel } = require('@discordjs/voice');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
-
-/**
- * Play audio from youtube video
- * @param {Interaction} interaction
- * @param {*} guildQueue
- */
-async function play(interaction, guildQueue) {
-	const song = guildQueue.songs[0];
-	if (!song) {
-		guildQueue.voiceChannel.leave();
-		interaction.client.globalQueue.delete(interaction.guild.id);
-		return;
-	}
-
-	let resource = createAudioResource(ytdl(guildQueue.songs[0].url));
-	const audioPlayer = guildQueue.player;
-	guildQueue.connection.subscribe(audioPlayer);
-	audioPlayer.play(resource);
-
-	await interaction.reply(`🎶 Start playing: **${song.title}**`);
-	console.log(`🎶 Start playing: **${song.title}**`);
-
-	audioPlayer.on('error', error => {
-		console.error(error);
-	});
-	audioPlayer.on(AudioPlayerStatus.Idle, () => {
-		guildQueue.songs.shift();
-		if (guildQueue.songs.length > 0) {
-			resource = createAudioResource(ytdl(guildQueue.songs[0].url));
-			audioPlayer.play(resource);
-			guildQueue.textChannel.send(`🎶 Start playing: **${guildQueue.songs[0].title}**`);
-		}
-		else {
-			interaction.client.globalQueue.delete(interaction.guild.id);
-		}
-	});
-
-}
+const ClientPlayer = require('../helpers/AudioPlayer.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -112,7 +73,7 @@ module.exports = {
 					adapterCreator: channel.guild.voiceAdapterCreator,
 				});
 				guildQueue.connection = connection;
-				play(interaction, guildQueue);
+				ClientPlayer.playAudio(interaction, guildQueue);
 			}
 			catch (error) {
 				console.error(`I could not join the voice channel: ${error}`);

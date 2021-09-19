@@ -52,8 +52,9 @@ class Azure {
 		if (fileName == '') {
 			fileName = blobName;
 		}
+		const fullPath = savePath + fileName;
 		// Prevent overwriting
-		if (option != 'overwrite' && fs.existsSync(savePath.concat(fileName))) {
+		if (option != 'overwrite' && fs.existsSync(fullPath)) {
 			console.log(`Blob ${blobName} already downloaded!`);
 			return;
 		}
@@ -66,7 +67,8 @@ class Azure {
 			const containerClient = blobServiceClient.getContainerClient(containerName);
 			// Create a blob client using the local file name as the name for the blob
 			const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-			await blockBlobClient.downloadToFile(savePath.concat(blobName));
+			await blockBlobClient.downloadToFile(fullPath);
+			console.log(fullPath);
 		}
 		catch (error) {
 			console.log(error);
@@ -77,26 +79,52 @@ class Azure {
 	 * Download all files in container
 	 * @param {String} containerName
 	 * @param {String} path
+	 * @returns {Map} List of all blobs
 	 */
 	static async downloadAllBlobs(containerName, path) {
 		try {
 			// Create the BlobServiceClient object which will be used to create a container client
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
 			const containerClient = blobServiceClient.getContainerClient(containerName);
+			const blobList = new Map();
 
-			let i = 1;
+			let i = 0;
 			for await (const blob of containerClient.listBlobsFlat()) {
+				i += 1;
 				// Prevent overwriting
-				if (fs.existsSync(path)) {
+				if (fs.existsSync(`${path}/${blob.name}`)) {
 					console.log(`Blob ${blob.name} already downloaded!`);
 				}
 				else {
-					console.log(`Downloading blob ${i++}: ${blob.name}`);
+					console.log(`Downloading blob ${i}: ${blob.name}`);
 					// Create a blob client and download
 					const blockBlobClient = containerClient.getBlockBlobClient(blob.name);
-					await blockBlobClient.downloadToFile(path.concat(blob.name));
+					await blockBlobClient.downloadToFile(`${path}/${blob.name}`);
 				}
+				blobList.set(i, blob.name);
 			}
+
+			return blobList;
+		}
+		catch (error) {
+			console.log(error);
+		}
+	}
+
+	static async createContainer(containerName) {
+		try {
+			// Create the BlobServiceClient object which will be used to create a container client
+			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
+
+			console.log('\nCreating container...');
+			console.log('\t', containerName);
+
+			// Get a reference to a container
+			const containerClient = blobServiceClient.getContainerClient(containerName);
+
+			// Create the container
+			const createContainerResponse = await containerClient.create();
+			console.log('Container was created successfully. requestId: ', createContainerResponse.requestId);
 		}
 		catch (error) {
 			console.log(error);
@@ -116,6 +144,22 @@ class Azure {
 				i += 1;
 			}
 			return blobList;
+		}
+		catch (error) {
+			console.log(error);
+		}
+	}
+
+	static async listContainers() {
+		try {
+			// Create the BlobServiceClient object which will be used to create a container client
+			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
+			const containerList = [];
+			for await (const container of blobServiceClient.listContainers()) {
+				containerList.push(container.name);
+			}
+
+			return containerList;
 		}
 		catch (error) {
 			console.log(error);
