@@ -29,6 +29,7 @@ client.once('ready', () => {
 		// Download all sounds
 		for (const guildId of guilds) {
 			const path = `${root}/sounds/${guildId}`;
+			console.log(path);
 			if (!fs.existsSync(path)) {
 				fs.mkdirSync(path);
 			}
