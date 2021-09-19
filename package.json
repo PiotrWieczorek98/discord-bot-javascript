@@ -18,6 +18,9 @@
     "url": "https://github.com/PiotrWieczorek98/discord-js-boi-bot/issues"
   },
   "homepage": "https://github.com/PiotrWieczorek98/discord-js-boi-bot#readme",
+  "engines": {
+  "node": "16.x"
+  },
   "dependencies": {
     "@azure/storage-blob": "^12.8.0",
     "@discordjs/builders": "^0.6.0",
