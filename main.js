@@ -11,6 +11,7 @@ const client = new Client();
 
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
+	client.user.setActivity('Loading...');
 	if (!fs.existsSync('./sounds')) {
 		fs.mkdirSync('./sounds');
 	}
@@ -56,6 +57,7 @@ client.once('ready', () => {
 		⣿⣷⡘⣿⡀⢻⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣿⣿⣿⣿⣷⡿⠟⠉⠄⠄⠄⠄⡄⢀
 		⣿⣿⣷⡈⢷⡀⠙⠛⠻⠿⠿⠿⠿⠿⠷⠾⠿⠟⣛⣋⣥⣶⣄⠄⢀⣄⠹⣦⢹⣿
 		`);
+		client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
 	})();
 });
 

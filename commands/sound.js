@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { joinVoiceChannel } = require('@discordjs/voice');
-const ClientPlayer = require('../helpers/AudioPlayer.js');
+const ClientPlayer = require('../helpers/ClientPlayer.js');
+const { AudioSourceLocal } = require('../helpers/AudioSource.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
 const root = require('../helpers/root.js');
 
@@ -36,10 +37,7 @@ module.exports = {
 
 		// Add to queue
 		const fullPath = `${root}/sounds/${interaction.member.guild.id}/${soundName}`;
-		const sound = {
-			path: fullPath,
-			title: soundName,
-		};
+		const sound = new AudioSourceLocal(fullPath, soundName);
 		if (guildQueue) {
 			guildQueue.songs.push(sound);
 			await interaction.reply(`✅ **${soundName}** has been added to the queue`);
@@ -47,21 +45,13 @@ module.exports = {
 			return;
 		}
 
-		// Create queue if doesn't exist
+		// Join VC
 		const voiceChannel = interaction.member.voice.channel;
-		guildQueue = new GuildQueue(interaction.channel, voiceChannel);
-
-		interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
-		guildQueue.songs.push(sound);
-
-		// Call function
 		try {
-			const connection = joinVoiceChannel({
-				channelId: voiceChannel.id,
-				guildId: voiceChannel.guild.id,
-				adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-			});
-			guildQueue.connection = connection;
+			// Create queue if doesn't exist
+			guildQueue = new GuildQueue(interaction.channel, voiceChannel);
+			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
+			guildQueue.songs.push(sound);
 			ClientPlayer.playAudio(interaction, guildQueue);
 		}
 		catch (error) {

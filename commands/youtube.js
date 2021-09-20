@@ -1,10 +1,11 @@
 const { Util } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { createAudioPlayer, joinVoiceChannel } = require('@discordjs/voice');
+const { joinVoiceChannel } = require('@discordjs/voice');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
-const ClientPlayer = require('../helpers/AudioPlayer.js');
+const ClientPlayer = require('../helpers/ClientPlayer.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
+const { AudioSourceYoutube } = require('../helpers/AudioSource.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -39,11 +40,8 @@ module.exports = {
 			if (err) {
 				return console.log(err);
 			}
-			const ytSong = {
-				id: results[0].id,
-				title: Util.escapeMarkdown(results[0].title),
-				url: results[0].link,
-			};
+			const result = results[0];
+			const ytSong = new AudioSourceYoutube(result.id, Util.escapeMarkdown(result.title), result.link);
 
 			// Add to queue
 			let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
@@ -54,19 +52,13 @@ module.exports = {
 				return;
 			}
 
-			// Create queue if doesn't exist
-			guildQueue = new GuildQueue(interaction.channel, voiceChannel);
-			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
-			guildQueue.songs.push(ytSong);
-
-			// Call function
+			// Join VC
 			try {
-				const connection = joinVoiceChannel({
-					channelId: voiceChannel.id,
-					guildId: voiceChannel.guild.id,
-					adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-				});
-				guildQueue.connection = connection;
+				// Create queue if doesn't exist
+				guildQueue = new GuildQueue(interaction.channel, voiceChannel);
+				interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
+				guildQueue.songs.push(ytSong);
+				// Call player function
 				ClientPlayer.playAudio(interaction, guildQueue);
 			}
 			catch (error) {
