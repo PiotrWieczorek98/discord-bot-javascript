@@ -24,8 +24,9 @@ class ClientPlayer {
 			guildQueue.textChannel.send(`🎶 Start playing: ${guildQueue.songs[0].title}`);
 		}
 		else {
-			audioPlayer.stop();
+			// Delete the queue
 			interaction.client.globalQueue.delete(interaction.guild.id);
+			audioPlayer.stop();
 		}
 	}
 
@@ -58,8 +59,8 @@ class ClientPlayer {
 		guildQueue.connection.subscribe(audioPlayer);
 		audioPlayer.play(resource);
 
-		await interaction.reply(`🎶 Start playing: ${song.title}`);
-		console.log(`🎶 Start playing: ${song.title}`);
+		await interaction.reply(`🎶 Playing: **${song.title}**`);
+		console.log(`🎶Playing: ${song.title}`);
 
 		audioPlayer.on('error', error => {
 			console.error(error);
@@ -67,7 +68,9 @@ class ClientPlayer {
 
 		// After finish play next audio from queue
 		audioPlayer.on(AudioPlayerStatus.Idle, () => {
-			this.playNextResource(interaction, guildQueue, audioPlayer);
+			if (guildQueue) {
+				this.playNextResource(interaction, guildQueue, audioPlayer);
+			}
 		});
 
 		// Handle error

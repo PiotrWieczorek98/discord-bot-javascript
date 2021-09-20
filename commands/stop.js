@@ -3,11 +3,13 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('stop')
-		.setDescription('Stop whatever is playing'),
+		.setDescription('It\'s time to stop!'),
 	async execute(interaction) {
-		const player = interaction.client.globalQueue.get(interaction.guildId).player;
-		player.stop();
-		await interaction.reply('Yikes...');
+		const audioPlayer = interaction.client.globalQueue.get(interaction.guildId).player;
+		interaction.client.globalQueue.delete(interaction.guild.id);
+		audioPlayer.stop();
+
+		await interaction.reply('No more!');
 
 	},
 };

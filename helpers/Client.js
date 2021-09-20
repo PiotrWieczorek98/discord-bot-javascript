@@ -23,7 +23,8 @@ module.exports = class extends Client {
 		// globalSoundList entry looks like this:
 		// {
 		// 	guildId: guildId,
-		// 	soundList: await Azure.downloadAllBlobs(guildId, path),
+		// 	soundList: [],
+		//  path: filePath;
 		// };
 		this.globalSoundList = [];
 		this.commands = new Collection();

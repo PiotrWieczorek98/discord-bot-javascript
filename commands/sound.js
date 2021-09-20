@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { createAudioPlayer, joinVoiceChannel } = require('@discordjs/voice');
+const { joinVoiceChannel } = require('@discordjs/voice');
 const ClientPlayer = require('../helpers/AudioPlayer.js');
+const GuildQueue = require('../helpers/GuildQueue.js');
 const root = require('../helpers/root.js');
 
 module.exports = {
@@ -20,6 +21,11 @@ module.exports = {
 				soundList = guildSoundList.soundList;
 			}
 		}
+		if (!soundList) {
+			console.log('Error while getting guild\'s sound list!');
+			await interaction.reply('Error while getting guild\'s sound list!');
+		}
+
 		const soundName = soundList.get(number);
 		let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 
@@ -29,36 +35,31 @@ module.exports = {
 		}
 
 		// Add to queue
-		const fullPath = `${root}\\sounds\\${interaction.member.guild.id}\\${soundName}`;
+		const fullPath = `${root}/sounds/${interaction.member.guild.id}/${soundName}`;
 		const sound = {
 			path: fullPath,
 			title: soundName,
 		};
 		if (guildQueue) {
 			guildQueue.songs.push(sound);
-			console.log(guildQueue.songs);
-			await interaction.reply(`✅ **${soundName}** has been added to the queue!`);
+			await interaction.reply(`✅ **${soundName}** has been added to the queue`);
+			console.log(`✅ ${soundName} has been added to the queue`);
 			return;
 		}
 
 		// Create queue if doesn't exist
-		const channel = interaction.member.voice.channel;
-		guildQueue = {
-			textChannel: interaction.channel,
-			voiceChannel: channel,
-			connection: null,
-			player: createAudioPlayer(),
-			songs: [],
-		};
+		const voiceChannel = interaction.member.voice.channel;
+		guildQueue = new GuildQueue(interaction.channel, voiceChannel);
+
 		interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
 		guildQueue.songs.push(sound);
 
 		// Call function
 		try {
 			const connection = joinVoiceChannel({
-				channelId: channel.id,
-				guildId: channel.guild.id,
-				adapterCreator: channel.guild.voiceAdapterCreator,
+				channelId: voiceChannel.id,
+				guildId: voiceChannel.guild.id,
+				adapterCreator: voiceChannel.guild.voiceAdapterCreator,
 			});
 			guildQueue.connection = connection;
 			ClientPlayer.playAudio(interaction, guildQueue);
@@ -66,7 +67,7 @@ module.exports = {
 		catch (error) {
 			console.error(`I could not join the voice channel: ${error}`);
 			interaction.client.globalQueue.delete(interaction.guild.id);
-			await channel.leave();
+			await voiceChannel.leave();
 			await interaction.reply(`I could not join the voice channel: ${error}`);
 			return;
 		}
