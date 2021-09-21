@@ -36,12 +36,13 @@ module.exports = {
 		await interaction.reply({ content: '🙉', ephemeral: true });
 
 		let message = '```css\n[SOUND LIST:]\n';
-		let previousWord = '';
+		let previousWord = soundList.get(1).split('_')[0];
 		for (const entry of soundList) {
 			let newLine = `${entry[0]}. ${entry[1]}\n`;
-			if (previousWord != entry[1]) {
-				previousWord = entry[1];
-				newLine += '\n';
+			const nextWord = entry[1].split('_')[0];
+			if (previousWord != nextWord) {
+				previousWord = nextWord;
+				newLine = '\n' + newLine;
 			}
 			message = await checkCharacterLimit(interaction, message, newLine);
 		}
