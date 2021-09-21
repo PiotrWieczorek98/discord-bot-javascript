@@ -2,10 +2,7 @@ const { BlobServiceClient } = require('@azure/storage-blob');
 const { envs } = require('./env-vars.js');
 const fs = require('fs');
 
-// ##############################################################################
-// This script allows communication with azure storage
-// ##############################################################################
-
+// This Class allows communication with azure storage
 class Azure {
 
 	/**

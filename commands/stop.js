@@ -9,7 +9,7 @@ module.exports = {
 		interaction.client.globalQueue.delete(interaction.guild.id);
 		audioPlayer.stop();
 
-		await interaction.reply('No more!');
-
+		await interaction.reply({ content: '⏹ Stopped player', ephemeral: true });
+		console.log('⏹ Stopped player');
 	},
 };

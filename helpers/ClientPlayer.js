@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 const GuildQueue = require('./GuildQueue');
 // eslint-disable-next-line no-unused-vars
-const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType, joinVoiceChannel } = require('@discordjs/voice');
+const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 const { AudioSourceYoutube, AudioSourceLocal } = require('./AudioSource');
 
@@ -34,8 +34,8 @@ class ClientPlayer {
 			}
 			discordPlayer.play(resource);
 
-			guildQueue.textChannel.send(`🎶 Start playing: ${newSource.title}`);
-			console.log(`🎶 Start playing: ${newSource.title}`);
+			guildQueue.textChannel.send(`🔊 Playing: ${newSource.title}`);
+			console.log(`🔊 Playing: ${newSource.title}`);
 		}
 		else {
 			// Delete the queue

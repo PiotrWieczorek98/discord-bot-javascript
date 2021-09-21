@@ -1,4 +1,26 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+// eslint-disable-next-line no-unused-vars
+const { Interaction } = require('discord.js');
+
+/**
+ * Discord's message limit is 2000 characters
+ * @param {Interaction} interaction
+ * @param {String} message
+ * @param {String} newLine
+ * @returns
+ */
+async function checkCharacterLimit(interaction, message, newLine) {
+	// Split messages due to char limit
+	if (message.length + newLine.length < 2000) {
+		message += newLine;
+	}
+	else {
+		message += '```';
+		await interaction.channel.send(message);
+		message = '```css\n';
+	}
+	return message;
+}
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -11,21 +33,17 @@ module.exports = {
 				soundList = entry.soundList;
 			}
 		}
-		await interaction.reply('The Boys proudly presents...\n');
+		await interaction.reply({ content: '🙉', ephemeral: true });
 
-		let message = '```css\n[Sound List:]\n';
-
+		let message = '```css\n[SOUND LIST:]\n';
+		let previousWord = '';
 		for (const entry of soundList) {
-			const newLine = `${entry[0]}. ${entry[1]}\n`;
-			// Split messages due to char limit
-			if (message.length + newLine.length < 2000) {
-				message += newLine;
+			let newLine = `${entry[0]}. ${entry[1]}\n`;
+			if (previousWord != entry[1]) {
+				previousWord = entry[1];
+				newLine += '\n';
 			}
-			else {
-				message += '```';
-				await interaction.channel.send(message);
-				message = '```css\n';
-			}
+			message = await checkCharacterLimit(interaction, message, newLine);
 		}
 
 		message += '```';

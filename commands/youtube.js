@@ -1,6 +1,5 @@
 const { Util } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { joinVoiceChannel } = require('@discordjs/voice');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
 const ClientPlayer = require('../helpers/ClientPlayer.js');
@@ -16,6 +15,7 @@ module.exports = {
 			.setDescription('Link to youtube video.')
 			.setRequired(true)),
 	async execute(interaction) {
+
 		// Check for abnormalities
 		if (!interaction.member.voice) {
 			await interaction.reply('Join voice channel first.');
@@ -24,7 +24,8 @@ module.exports = {
 		const voiceChannel = interaction.member.voice.channel;
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-			await interaction.reply('Not sufficient permissions!');
+			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });
+			console.log('❌ Not sufficient permissions!');
 			return;
 		}
 
@@ -41,14 +42,14 @@ module.exports = {
 				return console.log(err);
 			}
 			const result = results[0];
-			const ytSong = new AudioSourceYoutube(result.id, Util.escapeMarkdown(result.title), result.link);
+			const audio = new AudioSourceYoutube(result.id, Util.escapeMarkdown(result.title), result.link);
 
 			// Add to queue
 			let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 			if (guildQueue) {
-				guildQueue.songs.push(ytSong);
-				await interaction.reply(`✅ **${ytSong.title}** has been added to the queue`);
-				console.log(`✅ ${ytSong.title} has been added to the queue`);
+				guildQueue.songs.push(audio);
+				await interaction.reply(`☑️ **${audio.title}** has been added to the queue`);
+				console.log(`☑️ ${audio.title} has been added to the queue`);
 				return;
 			}
 
@@ -57,7 +58,7 @@ module.exports = {
 				// Create queue if doesn't exist
 				guildQueue = new GuildQueue(interaction.channel, voiceChannel);
 				interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
-				guildQueue.songs.push(ytSong);
+				guildQueue.songs.push(audio);
 				// Call player function
 				ClientPlayer.playAudio(interaction, guildQueue);
 			}

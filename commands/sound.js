@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { joinVoiceChannel } = require('@discordjs/voice');
 const ClientPlayer = require('../helpers/ClientPlayer.js');
 const { AudioSourceLocal } = require('../helpers/AudioSource.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
@@ -11,54 +10,69 @@ module.exports = {
 		.setDescription('Play sound from the list')
 		.addIntegerOption(option => option
 			.setName('number')
-			.setDescription('Number from the list.')
+			.setDescription('Number from the list')
 			.setRequired(true)),
 	async execute(interaction) {
 		const number = interaction.options.getInteger('number');
-		let soundList = null;
 
+		// Check for abnormalities
+		if (!interaction.member.voice) {
+			await interaction.reply('Join voice channel first.');
+			return;
+		}
+		const voiceChannel = interaction.member.voice.channel;
+		const permissions = voiceChannel.permissionsFor(interaction.client.user);
+		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
+			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });
+			console.log('❌ Not sufficient permissions!');
+			return;
+		}
+
+		// Get Guild's sound list
+		let soundList = null;
 		for (const guildSoundList of interaction.client.globalSoundList) {
 			if (guildSoundList.guildId == interaction.member.guild.id) {
 				soundList = guildSoundList.soundList;
 			}
 		}
 		if (!soundList) {
-			console.log('Error while getting guild\'s sound list!');
-			await interaction.reply('Error while getting guild\'s sound list!');
+			await interaction.reply('❌ Error while getting guild\'s sound list!');
+			console.log('❌ Error while getting guild\'s sound list!');
 		}
 
+		// Get the sound
 		const soundName = soundList.get(number);
 		let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 
 		if (!soundName) {
-			await interaction.reply('Sike! That\'s a wrooong number!');
+			await interaction.reply({ content: '❌ Sike! That\'s a wrooong number! 🔥', ephemeral: true });
+			console.log('❌ Sike! That\'s a wrooong number! 🔥');
 			return;
 		}
 
 		// Add to queue
 		const fullPath = `${root}/sounds/${interaction.member.guild.id}/${soundName}`;
-		const sound = new AudioSourceLocal(fullPath, soundName);
+		const audio = new AudioSourceLocal(fullPath, soundName);
 		if (guildQueue) {
-			guildQueue.songs.push(sound);
-			await interaction.reply(`✅ **${soundName}** has been added to the queue`);
-			console.log(`✅ ${soundName} has been added to the queue`);
+			guildQueue.songs.push(audio);
+			await interaction.reply(`☑️ **${soundName}** has been added to the queue`);
+			console.log(`☑️ ${soundName} has been added to the queue`);
 			return;
 		}
 
 		// Join VC
-		const voiceChannel = interaction.member.voice.channel;
 		try {
 			// Create queue if doesn't exist
 			guildQueue = new GuildQueue(interaction.channel, voiceChannel);
 			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
-			guildQueue.songs.push(sound);
+			guildQueue.songs.push(audio);
 			ClientPlayer.playAudio(interaction, guildQueue);
 		}
 		catch (error) {
-			console.error(`I could not join the voice channel: ${error}`);
 			interaction.client.globalQueue.delete(interaction.guild.id);
 			await voiceChannel.leave();
-			await interaction.reply(`I could not join the voice channel: ${error}`);
+			await interaction.reply({ content: `❌I could not join the voice channel: ${error}`, ephemeral: true });
+			console.error(`❌I could not join the voice channel: ${error}`);
 			return;
 		}
 
