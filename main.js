@@ -1,19 +1,43 @@
 // Require the necessary discord.js classes
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
-const Client = require('./helpers/Client.js');
-const Azure = require('./helpers/azure-storage.js');
-const root = require('./helpers/root.js');
+const ClientExtended = require('./helpers/ClientExtended.js');
+const Azure = require('./helpers/Azure.js');
 const GuildSoundList = require('./helpers/GuildSoundList.js');
 
 // Create a new client instance
-const client = new Client();
+const client = new ClientExtended();
+
+// Download sounds from Azure
+async function getSoundsFromContainers() {
+	// Prepare container for all guilds;
+	const guilds = await Azure.listContainers();
+	client.guilds.cache.forEach(guild => {
+		if (!guilds.includes(guild.id)) {
+			(async () => {
+				await Azure.createContainer(guild.id);
+			})();
+		}
+	});
+	// Download all sounds
+	for (const guildId of guilds) {
+		const path = `${client.paths.SOUNDS}${guildId}`;
+		if (!fs.existsSync(path)) {
+			fs.mkdirSync(path);
+		}
+
+		const guildSoundList = new GuildSoundList(guildId, path);
+		await guildSoundList.downloadSounds();
+
+		client.globalSoundList.push(guildSoundList);
+	}
+}
 
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	client.user.setActivity('Loading...');
 	console.log(`
-			⣠⣤⣤⣤⣤⣤⣄⡀
+	⠀⠀⠀⠀⠀   ⣠⣤⣤⣤⣤⣤⣄⡀
 	⠀⠀⠀⠀⠀⢰⡿⠋⠁⠀⠀⠈⠉⠙⠻⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 	⠀⠀⠀⠀⢀⣿⠇⠀⢀⣴⣶⡾⠿⠿⠿⢿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 	⠀⠀⣀⣀⣸⡿⠀⠀⢸⣿⣇⠀⠀⠀⠀⠀⠀⠙⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -26,34 +50,15 @@ client.once('ready', () => {
 	⠀⠀⠀⠀⢸⣿⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
 	⠀⠀⠀⠀⢸⣿⣀⣀⣀⣼⡿⢿⣿⣿⣿⣿⣿⡿⣿⣿⡿
 	`);
-	if (!fs.existsSync('./sounds')) {
-		fs.mkdirSync('./sounds');
+
+	// Create folder to store all sounds
+	if (!fs.existsSync(client.paths.SOUNDS)) {
+		fs.mkdirSync(client.paths.SOUNDS);
 	}
 
-	// Async function to allow await
+	// Get sounds
 	(async () => {
-		// Prepare container for all guilds;
-		const guilds = await Azure.listContainers();
-		client.guilds.cache.forEach(guild => {
-			if (!guilds.includes(guild.id)) {
-				(async () => {
-					await Azure.createContainer(guild.id);
-				})();
-			}
-		});
-		// Download all sounds
-		for (const guildId of guilds) {
-			const path = `${root}/sounds/${guildId}`;
-			if (!fs.existsSync(path)) {
-				fs.mkdirSync(path);
-			}
-
-			const guildSoundList = new GuildSoundList(guildId, path);
-			await guildSoundList.downloadSounds();
-
-			client.globalSoundList.push(guildSoundList);
-		}
-
+		await getSoundsFromContainers();
 		console.log(`
 		⡿⠋⠄⣀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣌⠻⣿⣿
 		⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠹⣿
@@ -71,15 +76,16 @@ client.once('ready', () => {
 		⣿⣷⡘⣿⡀⢻⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣿⣿⣿⣿⣷⡿⠟⠉⠄⠄⠄⠄⡄⢀
 		⣿⣿⣷⡈⢷⡀⠙⠛⠻⠿⠿⠿⠿⠿⠷⠾⠿⠟⣛⣋⣥⣶⣄⠄⢀⣄⠹⣦⢹⣿
 		`);
-		client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
 	})();
+
+	client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
 });
 
 
 // Load commands
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync(client.paths.COMMANDS).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
+	const command = require(`${client.paths.COMMANDS}${file}`);
 	client.commands.set(command.data.name, command);
 }
 

@@ -1,8 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const ClientPlayer = require('../helpers/ClientPlayer.js');
+const GuildPlayer = require('../helpers/GuildPlayer.js');
 const { AudioSourceLocal } = require('../helpers/AudioSource.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
-const root = require('../helpers/root.js');
+// eslint-disable-next-line no-unused-vars
+const { Interaction } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,6 +13,9 @@ module.exports = {
 			.setName('number')
 			.setDescription('Number from the list')
 			.setRequired(true)),
+	/**
+	 * @param {Interaction} interaction
+	 */
 	async execute(interaction) {
 		const number = interaction.options.getInteger('number');
 
@@ -51,7 +55,7 @@ module.exports = {
 		}
 
 		// Add to queue
-		const fullPath = `${root}/sounds/${interaction.member.guild.id}/${soundName}`;
+		const fullPath = `${interaction.client.paths.SOUNDS}${interaction.member.guild.id}/${soundName}`;
 		const audio = new AudioSourceLocal(fullPath, soundName);
 		if (guildQueue) {
 			guildQueue.songs.push(audio);
@@ -66,7 +70,7 @@ module.exports = {
 			guildQueue = new GuildQueue(interaction.channel, voiceChannel);
 			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
 			guildQueue.songs.push(audio);
-			ClientPlayer.playAudio(interaction, guildQueue);
+			GuildPlayer.playAudio(interaction, guildQueue);
 		}
 		catch (error) {
 			interaction.client.globalQueue.delete(interaction.guild.id);

@@ -1,4 +1,4 @@
-const Azure = require('./azure-storage.js');
+const Azure = require('./Azure.js');
 
 class GuildSoundList {
 	/**

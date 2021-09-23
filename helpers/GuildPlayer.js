@@ -5,7 +5,7 @@ const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType } = requ
 const ytdl = require('ytdl-core');
 const { AudioSourceYoutube, AudioSourceLocal } = require('./AudioSource');
 
-class ClientPlayer {
+class GuildPlayer {
 	/**
 	 * Get next audio in queue
 	 * @todo: for some reason audioPlayer gets stuck on buffering when switching resource from
@@ -93,4 +93,4 @@ class ClientPlayer {
 	}
 }
 
-module.exports = ClientPlayer;
+module.exports = GuildPlayer;

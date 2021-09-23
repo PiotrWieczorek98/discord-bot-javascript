@@ -2,20 +2,24 @@ const { Util } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
-const ClientPlayer = require('../helpers/ClientPlayer.js');
+const GuildPlayer = require('../helpers/GuildPlayer.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
 const { AudioSourceYoutube } = require('../helpers/AudioSource.js');
+// eslint-disable-next-line no-unused-vars
+const { Interaction } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
 		.setDescription('Granie na żądanie')
 		.addStringOption(option => option
-			.setName('url')
-			.setDescription('Link to youtube video.')
+			.setName('phrase')
+			.setDescription('Phrase to search or link')
 			.setRequired(true)),
+	/**
+	 * @param {Interaction} interaction
+	 */
 	async execute(interaction) {
-
 		// Check for abnormalities
 		if (!interaction.member.voice) {
 			await interaction.reply('Join voice channel first.');
@@ -29,22 +33,37 @@ module.exports = {
 			return;
 		}
 
+		// Check if phrase contains video id
+		let phrase = interaction.options.getString('phrase');
+		const regex = /^https?:\/\/(?:www|m)\.youtube\.com\/watch\?v=([-_0-9A-Za-z]{11})'/i;
+		const videoId = phrase.match(regex);
+		if (videoId) {
+			// Replace phrase to only contain video id, whole url gives bad results
+			phrase = videoId;
+		}
+
 		// Search youtube
-		const url = interaction.options.getString('url');
+		let video = null;
 		const opts = {
 			maxResults: 1,
 			key: envs.YOUTUBE_API_TOKEN,
 			type: 'video',
 		};
 
-		await search(url.replace(/<(.+)>/g, '$1'), opts, async function(err, results) {
+		await search(phrase.replace(/<(.+)>/g, '$1'), opts, async function(err, results) {
 			if (err) {
-				return console.log(err);
+				console.log(err);
 			}
-			const result = results[0];
-			const audio = new AudioSourceYoutube(result.id, Util.escapeMarkdown(result.title), result.link);
+			video = results[0];
+
+			if (!video) {
+				await interaction.reply({ content: '❌ No results!', ephemeral: true });
+				console.log('❌ No results!');
+				return;
+			}
 
 			// Add to queue
+			const audio = new AudioSourceYoutube(video.id, Util.escapeMarkdown(video.title), video.link);
 			let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 			if (guildQueue) {
 				guildQueue.songs.push(audio);
@@ -60,7 +79,7 @@ module.exports = {
 				interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
 				guildQueue.songs.push(audio);
 				// Call player function
-				ClientPlayer.playAudio(interaction, guildQueue);
+				GuildPlayer.playAudio(interaction, guildQueue);
 			}
 			catch (error) {
 				console.error(`I could not join the voice channel: ${error}`);
