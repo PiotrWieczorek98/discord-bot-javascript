@@ -11,7 +11,7 @@ const { Interaction } = require('discord.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
-		.setDescription('Granie na żądanie')
+		.setDescription('Play youtube video')
 		.addStringOption(option => option
 			.setName('phrase')
 			.setDescription('Phrase to search or link')
@@ -35,7 +35,7 @@ module.exports = {
 
 		// Check if phrase contains video id
 		let phrase = interaction.options.getString('phrase');
-		const regex = /^https?:\/\/(?:www|m)\.youtube\.com\/watch\?v=([-_0-9A-Za-z]{11})'/i;
+		const regex = /\?v=([-_0-9A-Za-z]{11})'/i;
 		const videoId = phrase.match(regex);
 		if (videoId) {
 			// Replace phrase to only contain video id, whole url gives bad results

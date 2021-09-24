@@ -1,6 +1,7 @@
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { envs } = require('./env-vars.js');
 const fs = require('fs');
+const path = require('path');
 
 // This Class allows communication with azure storage
 class Azure {
@@ -11,12 +12,12 @@ class Azure {
 	 * @param {String} path
 	 * @param {String} fileName
 	 */
-	static async uploadBlob(containerName, path, fileName) {
-		const fullPath = path.concat(fileName);
+	static async uploadBlob(containerName, filePath) {
+		const fileName = path.parse(filePath).base;
 		try {
 			// Check if file exists
-			if (!fs.existsSync(fullPath)) {
-				console.log(`File ${fullPath} does not exist!`);
+			if (!fs.existsSync(filePath)) {
+				console.log(`File ${filePath} does not exist!`);
 				return;
 			}
 
@@ -29,7 +30,7 @@ class Azure {
 			const blockBlobClient = containerClient.getBlockBlobClient(fileName);
 
 			// Upload the created file
-			await blockBlobClient.uploadFile(fullPath);
+			await blockBlobClient.uploadFile(filePath);
 		}
 		catch (error) {
 			console.log('Failed uploading to azure!');
@@ -40,16 +41,16 @@ class Azure {
 	/**
 	 * Download files from azure storage
 	 * @param {String} containerName
-	 * @param {String} savePath
+	 * @param {String} directory
 	 * @param {String} blobName
 	 * @param {String} fileName
 	 * @param {String} option
 	 */
-	static async downloadBlob(containerName, savePath, blobName, fileName = '', option = '') {
+	static async downloadBlob(containerName, directory, blobName, fileName = '', option = '') {
 		if (fileName == '') {
 			fileName = blobName;
 		}
-		const fullPath = savePath + fileName;
+		const fullPath = directory + fileName;
 		// Prevent overwriting
 		if (option != 'overwrite' && fs.existsSync(fullPath)) {
 			console.log(`Blob ${blobName} already downloaded!`);
@@ -76,9 +77,9 @@ class Azure {
 	 * Download all files in container
 	 * @param {String} containerName
 	 * @param {String} path
-	 * @returns {Map} List of all blobs
+	 * @returns {Promise<Map>} List of all blobs
 	 */
-	static async downloadAllBlobs(containerName, path) {
+	static async downloadAllBlobs(containerName, directory) {
 		try {
 			// Create the BlobServiceClient object which will be used to create a container client
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
@@ -89,22 +90,26 @@ class Azure {
 			for await (const blob of containerClient.listBlobsFlat()) {
 				i += 1;
 				// Prevent overwriting
-				if (fs.existsSync(`${path}/${blob.name}`)) {
+				if (fs.existsSync(`${directory}/${blob.name}`)) {
 					console.log(`Blob ${blob.name} already downloaded!`);
 				}
 				else {
 					console.log(`Downloading blob ${i}: ${blob.name}`);
 					// Create a blob client and download
 					const blockBlobClient = containerClient.getBlockBlobClient(blob.name);
-					await blockBlobClient.downloadToFile(`${path}/${blob.name}`);
+					await blockBlobClient.downloadToFile(`${directory}/${blob.name}`);
 				}
 				blobList.set(i, blob.name);
 			}
-
-			return blobList;
+			return new Promise((resolve) => {
+				resolve(blobList);
+			});
 		}
 		catch (error) {
 			console.log(error);
+			return new Promise((reject) => {
+				reject(error);
+			});
 		}
 	}
 

@@ -5,6 +5,7 @@ config.json
 .eslintrc.json
 .vs/
 sounds/
+data/
 
 # Logs
 logs

@@ -1,9 +1,14 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+// eslint-disable-next-line no-unused-vars
+const { Interaction } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('queue')
 		.setDescription('List of songs in queue.'),
+	/**
+	 * @param {Interaction} interaction
+	 */
 	async execute(interaction) {
 		const guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 		if (!guildQueue) {

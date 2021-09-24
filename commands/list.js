@@ -26,6 +26,9 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('list')
 		.setDescription('Sounds list'),
+	/**
+	 * @param {Interaction} interaction
+	 */
 	async execute(interaction) {
 		let soundList = null;
 		for (const entry of interaction.client.globalSoundList) {

@@ -1,6 +1,7 @@
 // Require the necessary discord.js classes
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
+const readline = require('readline');
 const ClientExtended = require('./helpers/ClientExtended.js');
 const Azure = require('./helpers/Azure.js');
 const GuildSoundList = require('./helpers/GuildSoundList.js');
@@ -10,55 +11,91 @@ const client = new ClientExtended();
 
 // Download sounds from Azure
 async function getSoundsFromContainers() {
-	// Prepare container for all guilds;
-	const guilds = await Azure.listContainers();
-	client.guilds.cache.forEach(guild => {
-		if (!guilds.includes(guild.id)) {
+	// Check directories
+	if (!fs.existsSync(client.paths.SOUNDS)) {
+		fs.mkdirSync(client.paths.SOUNDS);
+	}
+	// Check containers for every guild
+	const containers = await Azure.listContainers();
+	for (const entry of client.guilds.cache) {
+		const guild = entry[1];
+
+		// Create one if didn't find
+		if (!containers.includes(guild.id)) {
 			(async () => {
 				await Azure.createContainer(guild.id);
 			})();
 		}
-	});
-	// Download all sounds
-	for (const guildId of guilds) {
-		const path = `${client.paths.SOUNDS}${guildId}`;
+
+		// Download all sounds
+		const path = `${client.paths.SOUNDS}${guild.id}`;
 		if (!fs.existsSync(path)) {
 			fs.mkdirSync(path);
 		}
 
-		const guildSoundList = new GuildSoundList(guildId, path);
+		const guildSoundList = new GuildSoundList(guild.id, path);
 		await guildSoundList.downloadSounds();
 
 		client.globalSoundList.push(guildSoundList);
 	}
 }
 
+async function getDataFromContainer() {
+	const containers = await Azure.listContainers();
+	// Check directory
+	if (!fs.existsSync(client.paths.DATA)) {
+		fs.mkdirSync(client.paths.DATA);
+	}
+
+	// Check container
+	if (!containers.includes(client.vars.CONTAINER_DATA)) {
+		await Azure.createContainer(client.vars.CONTAINER_DATA);
+	}
+
+	// Download files
+	const filesMap = await Azure.downloadAllBlobs(client.vars.CONTAINER_DATA, client.paths.DATA);
+	const files = [... filesMap.values()];
+
+	// Load data
+	const fileAutoUpladPath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
+	let guilds = null;
+	if (files.includes(client.vars.FILE_AUTO_UPLOAD)) {
+		fs.readFile(fileAutoUpladPath, function(err, data) {
+
+			guilds = JSON.parse(data);
+			guilds.forEach((value) => {
+				client.autoUploadSoundChannel.set(value[0], value[1]);
+			});
+		});
+	}
+	else {
+		// Prepare data and upload
+		guilds = new Map();
+		client.guilds.cache.forEach((guild) => {
+			guilds.set(guild.id, -1);
+			client.autoUploadSoundChannel.set(guild.id, -1);
+		});
+
+		const serializedGuilds = JSON.stringify([...guilds.entries()]);
+		fs.writeFile(fileAutoUpladPath, serializedGuilds,
+			async function(err) {
+				if (err) {
+					console.error('Error writing file! ', err);
+				}
+				await Azure.uploadBlob(client.vars.CONTAINER_DATA, fileAutoUpladPath);
+			},
+		);
+	}
+}
+
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	client.user.setActivity('Loading...');
-	console.log(`
-	⠀⠀⠀⠀⠀   ⣠⣤⣤⣤⣤⣤⣄⡀
-	⠀⠀⠀⠀⠀⢰⡿⠋⠁⠀⠀⠈⠉⠙⠻⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-	⠀⠀⠀⠀⢀⣿⠇⠀⢀⣴⣶⡾⠿⠿⠿⢿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-	⠀⠀⣀⣀⣸⡿⠀⠀⢸⣿⣇⠀⠀⠀⠀⠀⠀⠙⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-	⠀⣾⡟⠛⣿⡇⠀⠀⢸⣿⣿⣷⣤⣤⣤⣤⣶⣶⣿⠇⠀⠀⠀⠀⠀⠀⠀⣀⠀⠀
-	⢀⣿⠀⢀⣿⡇⠀⠀⠀⠻⢿⣿⣿⣿⣿⣿⠿⣿⡏⠀⠀⠀⠀⢴⣶⣶⣿⣿⣿⣆
-	⢸⣿⠀⢸⣿⡇⠀⠀⠀⠀⠀⠈⠉⠁⠀⠀⠀⣿⡇⣀⣠⣴⣾⣮⣝⠿⠿⠿⣻⡟
-	⢸⣿⠀⠘⣿⡇⠀⠀⠀⠀⠀⠀⠀⣠⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠁⠉
-	⠸⣿⠀⠀⣿⡇⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠉⠀⠀⠀⠀
-	⠀⠻⣷⣶⣿⣇⠀⠀⠀⢠⣼⣿⣿⣿⣿⣿⣿⣿⣛⣛⣻⠉⠁⠀⠀⠀⠀⠀⠀⠀
-	⠀⠀⠀⠀⢸⣿⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀
-	⠀⠀⠀⠀⢸⣿⣀⣀⣀⣼⡿⢿⣿⣿⣿⣿⣿⡿⣿⣿⡿
-	`);
-
-	// Create folder to store all sounds
-	if (!fs.existsSync(client.paths.SOUNDS)) {
-		fs.mkdirSync(client.paths.SOUNDS);
-	}
 
 	// Get sounds
 	(async () => {
 		await getSoundsFromContainers();
+		await getDataFromContainer();
 		console.log(`
 		⡿⠋⠄⣀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣌⠻⣿⣿
 		⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠹⣿
@@ -75,7 +112,7 @@ client.once('ready', () => {
 		⣷⡘⣷⡀⠘⣿⣿⣿⣿⣿⣿⣿⣿⡋⢀⣠⣤⣶⣶⣾⡆⣿⣿⣿⠟⠁⠄⠄⠄⠄
 		⣿⣷⡘⣿⡀⢻⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣿⣿⣿⣿⣷⡿⠟⠉⠄⠄⠄⠄⡄⢀
 		⣿⣿⣷⡈⢷⡀⠙⠛⠻⠿⠿⠿⠿⠿⠷⠾⠿⠟⣛⣋⣥⣶⣄⠄⢀⣄⠹⣦⢹⣿
-		`);
+		            BOT IS READY!`);
 	})();
 
 	client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
@@ -101,8 +138,8 @@ client.on('interactionCreate', async interaction => {
 		await command.execute(interaction);
 	}
 	catch (error) {
+		await interaction.reply({ content: '😬 There was an error while executing this command!', ephemeral: true });
 		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });
 

@@ -19,6 +19,7 @@ class ClientExtended extends Client {
 		// 	};
 		// }
 		this.globalQueue = new Map();
+
 		// globalSoundList entry looks like:
 		// {
 		// 	guildId: guildId,
@@ -26,16 +27,26 @@ class ClientExtended extends Client {
 		//  path: filePath;
 		// };
 		this.globalSoundList = [];
+
 		// All commands are stored here
 		this.commands = new Collection();
+
 		// Dedicate specific channel for auto upload sounds
-		// Map is {<guildId>, {<isEnabled>, channelId}}
 		// if channelId is not specified default is any channel
+		// Map is {<guildId>, <channelId>}
 		this.autoUploadSoundChannel = new Map();
+
 		// Store all paths to not scatter it across the app
 		this.paths = {
 			COMMANDS: './commands/',
 			SOUNDS: './sounds/',
+			DATA: './data/',
+		};
+
+		// Store global variables here
+		this.vars = {
+			CONTAINER_DATA: 'data',
+			FILE_AUTO_UPLOAD: 'auto-upload.json',
 		};
 	}
 }
