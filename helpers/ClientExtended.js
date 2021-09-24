@@ -45,6 +45,8 @@ class ClientExtended extends Client {
 
 		// Store global variables here
 		this.vars = {
+			HEROKU_APP: 'discord-js-boi-bot',
+			HEROKU_DINO: 'worker',
 			CONTAINER_DATA: 'data',
 			FILE_AUTO_UPLOAD: 'auto-upload.json',
 		};

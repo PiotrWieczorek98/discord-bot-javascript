@@ -11,6 +11,7 @@ const client = new ClientExtended();
 
 // Download sounds from Azure
 async function getSoundsFromContainers() {
+	console.log('\nGetting guilds\' sounds from container');
 	// Check directories
 	if (!fs.existsSync(client.paths.SOUNDS)) {
 		fs.mkdirSync(client.paths.SOUNDS);
@@ -37,10 +38,12 @@ async function getSoundsFromContainers() {
 		await guildSoundList.downloadSounds();
 
 		client.globalSoundList.push(guildSoundList);
+		console.log(`Guilds' sounds:\n${client.globalSoundList}\n`);
 	}
 }
 
 async function getDataFromContainer() {
+	console.log('\nGetting guilds\' data from container');
 	const containers = await Azure.listContainers();
 	// Check directory
 	if (!fs.existsSync(client.paths.DATA)) {
@@ -86,6 +89,7 @@ async function getDataFromContainer() {
 			},
 		);
 	}
+	console.log(`Guilds' data:\n${client.autoUploadSoundChannel}\n`);
 }
 
 // When the client is ready, run this code (only once)
@@ -112,7 +116,7 @@ client.once('ready', () => {
 		⣷⡘⣷⡀⠘⣿⣿⣿⣿⣿⣿⣿⣿⡋⢀⣠⣤⣶⣶⣾⡆⣿⣿⣿⠟⠁⠄⠄⠄⠄
 		⣿⣷⡘⣿⡀⢻⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣿⣿⣿⣿⣷⡿⠟⠉⠄⠄⠄⠄⡄⢀
 		⣿⣿⣷⡈⢷⡀⠙⠛⠻⠿⠿⠿⠿⠿⠷⠾⠿⠟⣛⣋⣥⣶⣄⠄⢀⣄⠹⣦⢹⣿
-		            BOT IS READY!`);
+		        	BOT IS READY!`);
 	})();
 
 	client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
