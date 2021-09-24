@@ -1,7 +1,6 @@
 // Require the necessary discord.js classes
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
-const readline = require('readline');
 const ClientExtended = require('./helpers/ClientExtended.js');
 const Azure = require('./helpers/Azure.js');
 const GuildSoundList = require('./helpers/GuildSoundList.js');
@@ -38,7 +37,7 @@ async function getSoundsFromContainers() {
 		await guildSoundList.downloadSounds();
 
 		client.globalSoundList.push(guildSoundList);
-		console.log(`Guilds' sounds:\n${client.globalSoundList}\n`);
+		console.log(`Guilds' sounds:\n${client.globalSoundList.entries()}\n`);
 	}
 }
 
@@ -89,7 +88,7 @@ async function getDataFromContainer() {
 			},
 		);
 	}
-	console.log(`Guilds' data:\n${client.autoUploadSoundChannel}\n`);
+	console.log(`Guilds' data:\n${client.autoUploadSoundChannel.entries()}\n`);
 }
 
 // When the client is ready, run this code (only once)
@@ -133,11 +132,8 @@ for (const file of commandFiles) {
 // Listen for commands
 client.on('interactionCreate', async interaction => {
 	if (!interaction.isCommand()) return;
-
 	const command = client.commands.get(interaction.commandName);
-
 	if (!command) return;
-
 	try {
 		await command.execute(interaction);
 	}

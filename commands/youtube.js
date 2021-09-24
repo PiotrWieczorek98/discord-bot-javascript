@@ -36,11 +36,11 @@ module.exports = {
 		}
 
 		// Check if phrase contains video id
-		const regex = /\?v=([-_0-9A-Za-z]{11})'/i;
+		const regex = /\?v=([-_0-9A-Za-z]{11})/i;
 		const videoId = phrase.match(regex);
 		if (videoId) {
 			// Replace phrase to only contain video id, whole url gives bad results
-			phrase = videoId;
+			phrase = videoId[1];
 		}
 
 		// Search youtube

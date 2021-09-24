@@ -2,8 +2,8 @@
 const GuildQueue = require('./GuildQueue');
 // eslint-disable-next-line no-unused-vars
 const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType } = require('@discordjs/voice');
-const ytdl = require('ytdl-core');
 const { AudioSourceYoutube, AudioSourceLocal } = require('./AudioSource');
+const playDl = require('play-dl') ;
 
 class GuildPlayer {
 	/**
@@ -14,7 +14,7 @@ class GuildPlayer {
 	 * @param {GuildQueue} guildQueue
 	 * @param {AudioPlayer} discordPlayer
 	 */
-	static playNextResource(interaction, guildQueue, discordPlayer) {
+	static async playNextResource(interaction, guildQueue, discordPlayer) {
 		if (guildQueue.songs.length > 1) {
 			const oldSource = guildQueue.songs.shift();
 			const newSource = guildQueue.songs[0];
@@ -26,11 +26,11 @@ class GuildPlayer {
 			}
 
 			if (newSource instanceof AudioSourceYoutube) {
-				resource = createAudioResource(
-					ytdl(newSource.url, { filter: 'audioonly' }), { inputType: StreamType.Arbitrary, silencePaddingFrames: 10 });
+				const stream = await playDl.stream(newSource.url);
+				resource = createAudioResource(stream.stream, { inputType : stream.type });
 			}
 			else if (newSource instanceof AudioSourceLocal) {
-				resource = createAudioResource(newSource.path, { inputType: StreamType.Arbitrary, silencePaddingFrames: 10 });
+				resource = createAudioResource(newSource.path, { inputType: StreamType.Arbitrary });
 			}
 			discordPlayer.play(resource);
 
@@ -61,11 +61,11 @@ class GuildPlayer {
 
 		let resource = null;
 		if (song instanceof AudioSourceYoutube) {
-			resource = createAudioResource(
-				ytdl(song.url, { filter: 'audioonly' }), { inputType: StreamType.Arbitrary, silencePaddingFrames: 10 });
+			const stream = await playDl.stream(song.url);
+			resource = createAudioResource(stream.stream, { inputType : stream.type });
 		}
 		else if (song instanceof AudioSourceLocal) {
-			resource = createAudioResource(song.path, { inputType: StreamType.Arbitrary, silencePaddingFrames: 10 });
+			resource = createAudioResource(song.path, { inputType: StreamType.Arbitrary });
 		}
 		const audioPlayer = guildQueue.player;
 		guildQueue.connection.subscribe(audioPlayer);
@@ -79,9 +79,9 @@ class GuildPlayer {
 		});
 
 		// After finish play next audio from queue
-		audioPlayer.on(AudioPlayerStatus.Idle, () => {
+		audioPlayer.on(AudioPlayerStatus.Idle, async () => {
 			if (guildQueue) {
-				this.playNextResource(interaction, guildQueue, audioPlayer);
+				await this.playNextResource(interaction, guildQueue, audioPlayer);
 			}
 		});
 

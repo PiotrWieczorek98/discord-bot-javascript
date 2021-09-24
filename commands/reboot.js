@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 const Heroku = require('heroku-client');
-const {envs} = require('../helpers/env-vars.js');
+const { envs } = require('../helpers/env-vars.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
