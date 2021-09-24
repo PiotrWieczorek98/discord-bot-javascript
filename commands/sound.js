@@ -20,11 +20,11 @@ module.exports = {
 		const number = interaction.options.getInteger('number');
 
 		// Check for abnormalities
-		if (!interaction.member.voice) {
-			await interaction.reply('Join voice channel first.');
+		const voiceChannel = interaction.member.voice.channel;
+		if (!voiceChannel) {
+			await interaction.reply({ content: 'Join voice channel first.', ephemeral: true });
 			return;
 		}
-		const voiceChannel = interaction.member.voice.channel;
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
 			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });

@@ -20,12 +20,14 @@ module.exports = {
 	 * @param {Interaction} interaction
 	 */
 	async execute(interaction) {
+		let phrase = interaction.options.getString('phrase');
+
 		// Check for abnormalities
-		if (!interaction.member.voice) {
-			await interaction.reply('Join voice channel first.');
+		const voiceChannel = interaction.member.voice.channel;
+		if (!voiceChannel) {
+			await interaction.reply({ content: 'Join voice channel first.', ephemeral: true });
 			return;
 		}
-		const voiceChannel = interaction.member.voice.channel;
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
 			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });
@@ -34,7 +36,6 @@ module.exports = {
 		}
 
 		// Check if phrase contains video id
-		let phrase = interaction.options.getString('phrase');
 		const regex = /\?v=([-_0-9A-Za-z]{11})'/i;
 		const videoId = phrase.match(regex);
 		if (videoId) {
