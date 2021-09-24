@@ -10,8 +10,11 @@ module.exports = {
 	 * @param {Interaction} interaction
 	 */
 	async execute(interaction) {
-		await interaction.reply(`Server name: ${interaction.guild.name}\nTotal members: 
-		${interaction.guild.memberCount}\nCreated At: ${interaction.guild.createdAt}\n 
-		Verification Level: ${interaction.guild.verificationLevel}`);
+		const message = `**Server name:** ${interaction.guild.name}\n
+		**Total members:** ${interaction.guild.memberCount}\n
+		**Created At:** ${interaction.guild.createdAt}\n 
+		**Verification Level:** ${interaction.guild.verificationLevel}`;
+		await interaction.reply(message);
+		console.log(message);
 	},
 };

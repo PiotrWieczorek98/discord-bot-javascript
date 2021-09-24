@@ -12,7 +12,9 @@ module.exports = {
 	 * @param {Interaction} interaction
 	 */
 	async execute(interaction) {
-		await interaction.reply('Rebooting...');
+		const message = 'Rebooting...';
+		await interaction.reply(message);
+		console.log(message);
 		const heroku = new Heroku({ token: envs.HEROKU_API_TOKEN });
 		heroku.delete(`/apps/${interaction.client.vars.HEROKU_APP}/dynos/${interaction.client.vars.HEROKU_DINO}`);
 	},

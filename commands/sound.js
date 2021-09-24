@@ -18,17 +18,21 @@ module.exports = {
 	 */
 	async execute(interaction) {
 		const number = interaction.options.getInteger('number');
+		let message = null;
 
 		// Check for abnormalities
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) {
-			await interaction.reply({ content: 'Join voice channel first.', ephemeral: true });
+			message = 'Join voice channel first.';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 			return;
 		}
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });
-			console.log('❌ Not sufficient permissions!');
+			message = '❌ Not sufficient permissions!';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 			return;
 		}
 
@@ -40,8 +44,9 @@ module.exports = {
 			}
 		}
 		if (!soundList) {
-			await interaction.reply('❌ Error while getting guild\'s sound list!');
-			console.log('❌ Error while getting guild\'s sound list!');
+			message = '❌ Error while getting guild\'s sound list!';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 		}
 
 		// Get the sound
@@ -49,8 +54,9 @@ module.exports = {
 		let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 
 		if (!soundName) {
-			await interaction.reply({ content: '❌ Sike! That\'s a wrooong number! 🔥', ephemeral: true });
-			console.log('❌ Sike! That\'s a wrooong number! 🔥');
+			message = '❌ Sike! That\'s a wrooong number! 🔥';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 			return;
 		}
 
@@ -59,8 +65,9 @@ module.exports = {
 		const audio = new AudioSourceLocal(fullPath, soundName);
 		if (guildQueue) {
 			guildQueue.songs.push(audio);
-			await interaction.reply(`☑️ **${soundName}** has been added to the queue`);
-			console.log(`☑️ ${soundName} has been added to the queue`);
+			message = `☑️ **${soundName}** has been added to the queue`;
+			await interaction.reply(message);
+			console.log(message);
 			return;
 		}
 
@@ -75,8 +82,9 @@ module.exports = {
 		catch (error) {
 			interaction.client.globalQueue.delete(interaction.guild.id);
 			await voiceChannel.leave();
-			await interaction.reply({ content: `❌I could not join the voice channel: ${error}`, ephemeral: true });
-			console.error(`❌I could not join the voice channel: ${error}`);
+			message = `❌I could not join the voice channel: ${error}`;
+			await interaction.reply({ content: message, ephemeral: true });
+			console.error(message);
 			return;
 		}
 

@@ -21,17 +21,21 @@ module.exports = {
 	 */
 	async execute(interaction) {
 		let phrase = interaction.options.getString('phrase');
+		let message = null;
 
 		// Check for abnormalities
 		const voiceChannel = interaction.member.voice.channel;
 		if (!voiceChannel) {
-			await interaction.reply({ content: 'Join voice channel first.', ephemeral: true });
+			message = 'Join voice channel first.';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 			return;
 		}
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-			await interaction.reply({ content: '❌ Not sufficient permissions!', ephemeral: true });
-			console.log('❌ Not sufficient permissions!');
+			message = '❌ Not sufficient permissions!';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(message);
 			return;
 		}
 
@@ -58,8 +62,9 @@ module.exports = {
 			video = results[0];
 
 			if (!video) {
-				await interaction.reply({ content: '❌ No results!', ephemeral: true });
-				console.log('❌ No results!');
+				message = '❌ No results!';
+				await interaction.reply({ content: message, ephemeral: true });
+				console.log(message);
 				return;
 			}
 
@@ -68,8 +73,9 @@ module.exports = {
 			let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
 			if (guildQueue) {
 				guildQueue.songs.push(audio);
-				await interaction.reply(`☑️ **${audio.title}** has been added to the queue`);
-				console.log(`☑️ ${audio.title} has been added to the queue`);
+				message = `☑️ **${audio.title}** has been added to the queue`;
+				await interaction.reply(message);
+				console.log(message);
 				return;
 			}
 
@@ -83,10 +89,11 @@ module.exports = {
 				GuildPlayer.playAudio(interaction, guildQueue);
 			}
 			catch (error) {
-				console.error(`I could not join the voice channel: ${error}`);
+				message = `I could not join the voice channel: ${error}`;
+				console.error(message);
 				interaction.client.globalQueue.delete(interaction.guild.id);
 				await voiceChannel.leave();
-				await interaction.reply(`I could not join the voice channel: ${error}`);
+				await interaction.reply(message);
 				return;
 			}
 		});

@@ -11,15 +11,22 @@ module.exports = {
 	 */
 	async execute(interaction) {
 		const guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
+		let message = null;
 		if (!guildQueue) {
-			await interaction.reply('There is nothing playing.');
+			message = 'There is nothing playing.';
+			await interaction.reply(message);
+			console.log(message);
 		}
 		else {
-			await interaction.reply(`
-            __**Song queue:**__
-            ${guildQueue.songs.map(song => `**-** ${song.title}`).join('\n')}
-            **Now playing:** ${guildQueue.songs[0].title}
-                    `);
+			message = '**Queue:**\n';
+			let i = 0;
+			for (const song of guildQueue.songs) {
+				i += 1;
+				message += `${i}. ${song.title}\n`;
+			}
+			message += `\n**Now playing:** ${guildQueue.songs[0].title}`;
+			await interaction.reply(message);
+			console.log(message);
 		}
 	},
 };

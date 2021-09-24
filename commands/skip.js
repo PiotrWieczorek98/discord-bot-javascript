@@ -10,9 +10,10 @@ module.exports = {
 	 * @param {Interaction} interaction
 	 */
 	async execute(interaction) {
+		const message = '⏭ Skipping song';
 		const player = interaction.client.globalQueue.get(interaction.guildId).player;
 		player.stop();
-		await interaction.reply({ content: '⏭ Skipping song', ephemeral: true });
-
+		await interaction.reply({ content: message, ephemeral: true });
+		console.log(message);
 	},
 };

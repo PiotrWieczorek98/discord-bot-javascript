@@ -11,10 +11,11 @@ module.exports = {
 	 */
 	async execute(interaction) {
 		const audioPlayer = interaction.client.globalQueue.get(interaction.guildId).player;
+		const message = '⏹ Stopped player';
 		interaction.client.globalQueue.delete(interaction.guild.id);
 		audioPlayer.stop();
 
-		await interaction.reply({ content: '⏹ Stopped player', ephemeral: true });
-		console.log('⏹ Stopped player');
+		await interaction.reply({ content: message, ephemeral: true });
+		console.log(message);
 	},
 };
