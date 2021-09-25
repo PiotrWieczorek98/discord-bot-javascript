@@ -3,6 +3,10 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Interaction } = require('discord.js');
 const { floor } = require('lodash');
 
+// --------------------------------------------------------------------
+// Rolls a die
+// --------------------------------------------------------------------
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('roll')

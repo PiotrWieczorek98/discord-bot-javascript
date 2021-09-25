@@ -1,6 +1,10 @@
 const { Client, Collection } = require('discord.js');
 const { Intents } = require('discord.js');
 
+/**
+ * This is an extension for Client class.
+ * Contains addidional fields
+ */
 class ClientExtended extends Client {
 	constructor() {
 		super({

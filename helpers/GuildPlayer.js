@@ -5,6 +5,9 @@ const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType } = requ
 const { AudioSourceYoutube, AudioSourceLocal } = require('./AudioSource');
 const playDl = require('play-dl') ;
 
+/**
+ * Class responsible for audio player functions in voice channels
+ */
 class GuildPlayer {
 	/**
 	 * Get next audio in queue

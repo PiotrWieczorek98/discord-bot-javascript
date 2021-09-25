@@ -1,8 +1,12 @@
 const Azure = require('./Azure.js');
 
+/**
+ * Class represents guild's sound list stored in Azure.
+ * Used to play sounds in voice chat.
+ */
 class GuildSoundList {
 	/**
-     * Guild sound list class
+     * Constructs GuildSoundList object
      * @param {String} guildId
      * @param {String} path path where sounds will be downloaded
      */

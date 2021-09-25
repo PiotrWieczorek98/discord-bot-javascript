@@ -1,104 +1,24 @@
-// Require the necessary discord.js classes
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const ClientExtended = require('./helpers/ClientExtended.js');
-const Azure = require('./helpers/Azure.js');
-const GuildSoundList = require('./helpers/GuildSoundList.js');
+const Initializer = require('./helpers/Initializer.js');
+
+// -------------------------------------------------------------
+// Initialization
+// -------------------------------------------------------------
 
 // Create a new client instance
 const client = new ClientExtended();
 
-// Download sounds from Azure
-async function getSoundsFromContainers() {
-	console.log('\nGetting guilds\' sounds from container');
-	// Check directories
-	if (!fs.existsSync(client.paths.SOUNDS)) {
-		fs.mkdirSync(client.paths.SOUNDS);
-	}
-	// Check containers for every guild
-	const containers = await Azure.listContainers();
-	for (const entry of client.guilds.cache) {
-		const guild = entry[1];
-
-		// Create one if didn't find
-		if (!containers.includes(guild.id)) {
-			(async () => {
-				await Azure.createContainer(guild.id);
-			})();
-		}
-
-		// Download all sounds
-		const path = `${client.paths.SOUNDS}${guild.id}`;
-		if (!fs.existsSync(path)) {
-			fs.mkdirSync(path);
-		}
-
-		const guildSoundList = new GuildSoundList(guild.id, path);
-		await guildSoundList.downloadSounds();
-
-		client.globalSoundList.push(guildSoundList);
-		console.log(`Guilds' sounds:\n${client.globalSoundList.entries()}\n`);
-	}
-}
-
-async function getDataFromContainer() {
-	console.log('\nGetting guilds\' data from container');
-	const containers = await Azure.listContainers();
-	// Check directory
-	if (!fs.existsSync(client.paths.DATA)) {
-		fs.mkdirSync(client.paths.DATA);
-	}
-
-	// Check container
-	if (!containers.includes(client.vars.CONTAINER_DATA)) {
-		await Azure.createContainer(client.vars.CONTAINER_DATA);
-	}
-
-	// Download files
-	const filesMap = await Azure.downloadAllBlobs(client.vars.CONTAINER_DATA, client.paths.DATA);
-	const files = [... filesMap.values()];
-
-	// Load data
-	const fileAutoUpladPath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
-	let guilds = null;
-	if (files.includes(client.vars.FILE_AUTO_UPLOAD)) {
-		fs.readFile(fileAutoUpladPath, function(err, data) {
-
-			guilds = JSON.parse(data);
-			guilds.forEach((value) => {
-				client.autoUploadSoundChannel.set(value[0], value[1]);
-			});
-		});
-	}
-	else {
-		// Prepare data and upload
-		guilds = new Map();
-		client.guilds.cache.forEach((guild) => {
-			guilds.set(guild.id, -1);
-			client.autoUploadSoundChannel.set(guild.id, -1);
-		});
-
-		const serializedGuilds = JSON.stringify([...guilds.entries()]);
-		fs.writeFile(fileAutoUpladPath, serializedGuilds,
-			async function(err) {
-				if (err) {
-					console.error('Error writing file! ', err);
-				}
-				await Azure.uploadBlob(client.vars.CONTAINER_DATA, fileAutoUpladPath);
-			},
-		);
-	}
-	console.log(`Guilds' data:\n${client.autoUploadSoundChannel.entries()}\n`);
-}
 
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
 	client.user.setActivity('Loading...');
 
-	// Get sounds
+	// Get data
 	(async () => {
-		await getSoundsFromContainers();
-		await getDataFromContainer();
+		await Initializer.getSoundsFromContainers(client);
+		await Initializer.getDataFromContainer(client);
 		console.log(`
 		⡿⠋⠄⣀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣌⠻⣿⣿
 		⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠹⣿
@@ -129,7 +49,11 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-// Listen for commands
+// -------------------------------------------------------------
+// Listeners
+// -------------------------------------------------------------
+
+// Command was used
 client.on('interactionCreate', async interaction => {
 	if (!interaction.isCommand()) return;
 	const command = client.commands.get(interaction.commandName);
@@ -141,6 +65,16 @@ client.on('interactionCreate', async interaction => {
 		await interaction.reply({ content: '😬 There was an error while executing this command!', ephemeral: true });
 		console.error(error);
 	}
+});
+
+// Joined new guild
+client.on('guildCreate', async guild => {
+	await Initializer.addNewGuild(guild);
+});
+
+// No longer in a guild
+client.on('guildDelete', async guild => {
+	await Initializer.removeGuild(guild);
 });
 
 // Login to Discord with your client's token

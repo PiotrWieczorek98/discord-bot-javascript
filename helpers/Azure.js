@@ -3,7 +3,9 @@ const { envs } = require('./env-vars.js');
 const fs = require('fs');
 const path = require('path');
 
-// This Class allows communication with azure storage
+/**
+ * This Class allows communication with azure storage
+ */
 class Azure {
 
 	/**
@@ -118,8 +120,7 @@ class Azure {
 			// Create the BlobServiceClient object which will be used to create a container client
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
 
-			console.log('\nCreating container...');
-			console.log('\t', containerName);
+			console.log(`\nCreating container: ${containerName}`);
 
 			// Get a reference to a container
 			const containerClient = blobServiceClient.getContainerClient(containerName);
@@ -127,6 +128,25 @@ class Azure {
 			// Create the container
 			const createContainerResponse = await containerClient.create();
 			console.log('Container was created successfully. requestId: ', createContainerResponse.requestId);
+		}
+		catch (error) {
+			console.log(error);
+		}
+	}
+
+	static async deleteContainer(containerName) {
+		try {
+			// Create the BlobServiceClient object which will be used to create a container client
+			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
+
+			console.log(`\nDeleting container: ${containerName}`);
+
+			// Get a reference to a container
+			const containerClient = blobServiceClient.getContainerClient(containerName);
+
+			// Delete the container
+			const deleteContainerResponse = await containerClient.delete();
+			console.log('Container was deleted successfully. requestId: ', deleteContainerResponse.requestId);
 		}
 		catch (error) {
 			console.log(error);

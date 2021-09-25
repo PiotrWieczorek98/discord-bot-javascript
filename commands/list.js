@@ -2,6 +2,10 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 
+// --------------------------------------------------------------------
+// Sends guild's sound list
+// --------------------------------------------------------------------
+
 /**
  * Discord's message limit is 2000 characters
  * @param {Interaction} interaction

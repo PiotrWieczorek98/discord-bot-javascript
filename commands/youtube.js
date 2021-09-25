@@ -8,6 +8,10 @@ const { AudioSourceYoutube } = require('../helpers/AudioSource.js');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 
+// --------------------------------------------------------------------
+// Plays sound from youtube in voice chat or adds to queue
+// --------------------------------------------------------------------
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')

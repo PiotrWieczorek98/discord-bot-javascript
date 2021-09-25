@@ -3,6 +3,10 @@ const { Routes } = require('discord-api-types/v9');
 const { envs } = require('./env-vars.js');
 const fs = require('fs');
 
+// -------------------------------------------------------------
+// This script is used separately to deploy commands in dev guild
+// -------------------------------------------------------------
+
 const commandsJSON = [];
 const commandFiles = fs.readdirSync(__dirname + '/../commands/').filter(file => file.endsWith('.js'));
 

@@ -2,6 +2,10 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 
+// --------------------------------------------------------------------
+// Flips a coin
+// --------------------------------------------------------------------
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('flip')

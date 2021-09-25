@@ -2,9 +2,13 @@ const { createAudioPlayer, joinVoiceChannel } = require('@discordjs/voice');
 // eslint-disable-next-line no-unused-vars
 const { TextChannel, VoiceChannel } = require('discord.js');
 
+/**
+ * Class represents queue for audio player in voice chats.
+ * Each guild has a seperate queue.
+ */
 class GuildQueue {
 	/**
-	 * Guild queue class
+	 * Constructs GuildQueue object
 	 * @param {TextChannel} textChannel
 	 * @param {VoiceChannel} voiceChannel
 	 */

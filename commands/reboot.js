@@ -4,6 +4,10 @@ const { Interaction } = require('discord.js');
 const Heroku = require('heroku-client');
 const { envs } = require('../helpers/env-vars.js');
 
+// --------------------------------------------------------------------
+// Restarts Heroku dyno
+// --------------------------------------------------------------------
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('reboot')

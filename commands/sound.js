@@ -5,6 +5,10 @@ const GuildQueue = require('../helpers/GuildQueue.js');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 
+// --------------------------------------------------------------------
+// Plays sound from sound list in voice chat or adds to queue
+// --------------------------------------------------------------------
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('sound')

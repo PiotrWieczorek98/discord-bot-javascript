@@ -1,3 +1,6 @@
+/**
+ * Class used to distinguish audio source
+ */
 class AudioSourceLocal {
 	constructor(path, title) {
 		this.path = path,
@@ -5,6 +8,9 @@ class AudioSourceLocal {
 	}
 }
 
+/**
+ * Class used to distinguish audio source
+ */
 class AudioSourceYoutube {
 	constructor(id, title, url) {
 		this.id = id,
