@@ -38,7 +38,7 @@ class ClientExtended extends Client {
 		// Dedicate specific channel for auto upload sounds
 		// if channelId is not specified default is any channel
 		// Map is {<guildId>, <channelId>}
-		this.autoUploadSoundChannel = new Map();
+		this.soundsChannel = new Map();
 
 		// Store all paths to not scatter it across the app
 		this.paths = {
@@ -52,7 +52,7 @@ class ClientExtended extends Client {
 			HEROKU_APP: 'discord-js-boi-bot',
 			HEROKU_DINO: 'worker',
 			CONTAINER_DATA: 'data',
-			FILE_AUTO_UPLOAD: 'auto-upload.json',
+			FILE_SOUNDS_CHANNEL: 'sounds-channel.json',
 		};
 	}
 }

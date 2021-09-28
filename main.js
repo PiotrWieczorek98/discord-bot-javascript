@@ -1,7 +1,7 @@
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const ClientExtended = require('./helpers/ClientExtended.js');
-const Initializer = require('./helpers/Initializer.js');
+const DataManager = require('./helpers/DataManager.js');
 
 // -------------------------------------------------------------
 // Initialization
@@ -17,8 +17,8 @@ client.once('ready', () => {
 
 	// Get data
 	(async () => {
-		await Initializer.getSoundsFromContainers(client);
-		await Initializer.getDataFromContainer(client);
+		await DataManager.getSoundsFromContainers(client);
+		await DataManager.getDataFromContainer(client);
 		console.log(`
 		⡿⠋⠄⣀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣌⠻⣿⣿
 		⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠹⣿
@@ -59,22 +59,23 @@ client.on('interactionCreate', async interaction => {
 	const command = client.commands.get(interaction.commandName);
 	if (!command) return;
 	try {
+		console.log(`Guild ${interaction.guild.id}: ${interaction.commandName}`);
 		await command.execute(interaction);
 	}
 	catch (error) {
 		await interaction.reply({ content: '😬 There was an error while executing this command!', ephemeral: true });
-		console.error(error);
+		console.log(`Guild ${interaction.guild.id}: ${error}`);
 	}
 });
 
 // Joined new guild
 client.on('guildCreate', async guild => {
-	await Initializer.addNewGuild(guild);
+	await DataManager.addNewGuild(guild);
 });
 
 // No longer in a guild
 client.on('guildDelete', async guild => {
-	await Initializer.removeGuild(guild);
+	await DataManager.removeGuild(guild);
 });
 
 // Login to Discord with your client's token

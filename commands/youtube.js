@@ -32,14 +32,14 @@ module.exports = {
 		if (!voiceChannel) {
 			message = 'Join voice channel first.';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
 			message = '❌ Not sufficient permissions!';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 
@@ -68,7 +68,7 @@ module.exports = {
 			if (!video) {
 				message = '❌ No results!';
 				await interaction.reply({ content: message, ephemeral: true });
-				console.log(message);
+				console.log(`Guild ${interaction.guild.id}: ${message}`);
 				return;
 			}
 
@@ -79,7 +79,7 @@ module.exports = {
 				guildQueue.songs.push(audio);
 				message = `☑️ **${audio.title}** has been added to the queue`;
 				await interaction.reply(message);
-				console.log(message);
+				console.log(`Guild ${interaction.guild.id}: ${message}`);
 				return;
 			}
 
@@ -94,7 +94,7 @@ module.exports = {
 			}
 			catch (error) {
 				message = `I could not join the voice channel: ${error}`;
-				console.error(message);
+				console.error(`Guild ${interaction.guild.id}: ${message}`);
 				interaction.client.globalQueue.delete(interaction.guild.id);
 				await voiceChannel.leave();
 				await interaction.reply(message);

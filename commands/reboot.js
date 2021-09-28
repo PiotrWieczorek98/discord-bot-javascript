@@ -18,7 +18,7 @@ module.exports = {
 	async execute(interaction) {
 		const message = 'Rebooting...';
 		await interaction.reply(message);
-		console.log(message);
+		console.log(`Guild ${interaction.guild.id}: ${message}`);
 		const heroku = new Heroku({ token: envs.HEROKU_API_TOKEN });
 		heroku.delete(`/apps/${interaction.client.vars.HEROKU_APP}/dynos/${interaction.client.vars.HEROKU_DINO}`);
 	},

@@ -19,6 +19,6 @@ module.exports = {
 		**Created At:** ${interaction.guild.createdAt}\n 
 		**Verification Level:** ${interaction.guild.verificationLevel}`;
 		await interaction.reply(message);
-		console.log(message);
+		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
 };

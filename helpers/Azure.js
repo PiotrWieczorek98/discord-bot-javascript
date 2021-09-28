@@ -48,13 +48,13 @@ class Azure {
 	 * @param {String} fileName
 	 * @param {String} option
 	 */
-	static async downloadBlob(containerName, directory, blobName, fileName = '', option = '') {
+	static async downloadBlob(containerName, directory, blobName, fileName = '', overwrite = false) {
 		if (fileName == '') {
 			fileName = blobName;
 		}
 		const fullPath = directory + fileName;
 		// Prevent overwriting
-		if (option != 'overwrite' && fs.existsSync(fullPath)) {
+		if (fs.existsSync(fullPath) && !overwrite) {
 			console.log(`Blob ${blobName} already downloaded!`);
 			return;
 		}
@@ -78,10 +78,11 @@ class Azure {
 	/**
 	 * Download all files in container
 	 * @param {String} containerName
-	 * @param {String} path
+	 * @param {String} directory
+	 * @param {Boolean} overwrite
 	 * @returns {Promise<Map>} List of all blobs
 	 */
-	static async downloadAllBlobs(containerName, directory) {
+	static async downloadAllBlobs(containerName, directory, overwrite = false) {
 		try {
 			// Create the BlobServiceClient object which will be used to create a container client
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
@@ -92,7 +93,7 @@ class Azure {
 			for await (const blob of containerClient.listBlobsFlat()) {
 				i += 1;
 				// Prevent overwriting
-				if (fs.existsSync(`${directory}/${blob.name}`)) {
+				if (fs.existsSync(`${directory}/${blob.name}`) && !overwrite) {
 					console.log(`Blob ${blob.name} already downloaded!`);
 				}
 				else {

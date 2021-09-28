@@ -4,14 +4,62 @@ const ClientExtended = require('./ClientExtended');
 const { Guild } = require('discord.js');
 
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const Azure = require('./Azure');
 const GuildSoundList = require('./GuildSoundList');
 
 /**
- * Class used to retrieve data from cloud each time it is restarted.
- * Used because many hosting services use ephermal storage
+ * Class used to retrieve and upload data from cloud and manage local files.
+ * Prepared for usage with ephermal storage
  */
-class Initializer {
+class DataManager {
+
+	/**
+	 * Writes map object to file
+	 * @param {Map} map
+	 * @param {String} filePath
+	 * @returns {Promise<Boolean>}
+	 */
+	static async writeMapToFile(map, filePath) {
+		const serializedGuilds = JSON.stringify([...map.entries()]);
+		await fsPromises.writeFile(filePath, serializedGuilds,
+			function(err) {
+				if (err) {
+					console.error('Error writing file! ', err);
+					return new Promise((reject) => {
+						reject(false);
+					});
+				}
+			},
+		);
+		return new Promise((resolve) => {
+			resolve(true);
+		});
+	}
+
+	/**
+	 * Reads map from JSON
+	 * @param {String} filePath
+	 * @returns {Promise<Map<String, String>>}
+	 */
+	static async readMap(filePath) {
+		const data = await fsPromises.readFile(filePath,
+			function(err) {
+				if (err) {
+					console.error('Error writing file! ', err);
+					return new Promise((reject) => {
+						reject(null);
+					});
+				}
+			},
+		);
+
+		const result = JSON.parse(data);
+		return new Promise((resolve) => {
+			resolve(result);
+		});
+	}
+
 	/**
      * Download guilds' sounds from Azure
      * @param {ClientExtended} client
@@ -66,38 +114,27 @@ class Initializer {
 		}
 
 		// Download files
-		const filesMap = await Azure.downloadAllBlobs(client.vars.CONTAINER_DATA, client.paths.DATA);
+		const filesMap = await Azure.downloadAllBlobs(client.vars.CONTAINER_DATA, client.paths.DATA, true);
 		const files = [... filesMap.values()];
 
 		// Load data
-		const fileAutoUpladPath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
+		const filePath = `${client.paths.DATA}/${client.vars.FILE_SOUNDS_CHANNEL}`;
 		let guilds = null;
-		if (files.includes(client.vars.FILE_AUTO_UPLOAD)) {
-			fs.readFile(fileAutoUpladPath, function(err, data) {
-
-				guilds = JSON.parse(data);
-				guilds.forEach((value) => {
-					client.autoUploadSoundChannel.set(value[0], value[1]);
-				});
+		if (files.includes(client.vars.FILE_SOUNDS_CHANNEL)) {
+			guilds = await this.readMap(filePath);
+			guilds.forEach((value) => {
+				client.soundsChannel.set(value[0], value[1]);
 			});
 		}
 		else {
 			// Prepare data and upload
 			guilds = new Map();
 			client.guilds.cache.forEach((guild) => {
-				guilds.set(guild.id, -1);
-				client.autoUploadSoundChannel.set(guild.id, -1);
+				guilds.set(guild.id, null);
+				client.soundsChannel.set(guild.id, null);
 			});
-
-			const serializedGuilds = JSON.stringify([...guilds.entries()]);
-			fs.writeFile(fileAutoUpladPath, serializedGuilds,
-				async function(err) {
-					if (err) {
-						console.error('Error writing file! ', err);
-					}
-					await Azure.uploadBlob(client.vars.CONTAINER_DATA, fileAutoUpladPath);
-				},
-			);
+			await this.writeMapToFile(guilds, filePath);
+			await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
 		}
 		console.log('Guilds\' data loaded\n');
 	}
@@ -109,18 +146,11 @@ class Initializer {
 	static async addNewGuild(newGuild) {
 		// Prepare data and upload
 		const client = newGuild.client;
-		client.autoUploadSoundChannel.set(newGuild.id, -1);
+		client.autoUploadSoundChannel.set(newGuild.id, null);
 
-		const fileAutoUpladPath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
-		const serializedGuilds = JSON.stringify([...client.autoUploadSoundChannel.entries()]);
-		fs.writeFile(fileAutoUpladPath, serializedGuilds,
-			async function(err) {
-				if (err) {
-					console.error('Error writing file! ', err);
-				}
-				await Azure.uploadBlob(client.vars.CONTAINER_DATA, fileAutoUpladPath);
-			},
-		);
+		const filePath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
+		await this.writeMapToFile(client.autoUploadSoundChannel, filePath);
+		await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
 	}
 
 	/**
@@ -132,18 +162,11 @@ class Initializer {
 		const client = oldGuild.client;
 		client.autoUploadSoundChannel.delete(oldGuild.id);
 
-		const fileAutoUpladPath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
-		const serializedGuilds = JSON.stringify([...client.autoUploadSoundChannel.entries()]);
-		fs.writeFile(fileAutoUpladPath, serializedGuilds,
-			async function(err) {
-				if (err) {
-					console.error('Error writing file! ', err);
-				}
-				await Azure.uploadBlob(client.vars.CONTAINER_DATA, fileAutoUpladPath);
-			},
-		);
+		const filePath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
+		await this.writeMapToFile(client.autoUploadSoundChannel, filePath);
+		await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
 		await Azure.deleteContainer(oldGuild.id);
 	}
 }
 
-module.exports = Initializer;
+module.exports = DataManager;

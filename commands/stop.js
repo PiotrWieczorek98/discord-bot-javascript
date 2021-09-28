@@ -20,6 +20,6 @@ module.exports = {
 		audioPlayer.stop();
 
 		await interaction.reply({ content: message, ephemeral: true });
-		console.log(message);
+		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
 };

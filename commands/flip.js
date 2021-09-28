@@ -23,6 +23,6 @@ module.exports = {
 			result = ':coin: Tails!';
 		}
 		await interaction.reply(result);
-
+		console.log(`Guild ${interaction.guild.id}: ${result}`);
 	},
 };

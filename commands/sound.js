@@ -29,14 +29,14 @@ module.exports = {
 		if (!voiceChannel) {
 			message = 'Join voice channel first.';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 		const permissions = voiceChannel.permissionsFor(interaction.client.user);
 		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
 			message = '❌ Not sufficient permissions!';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 
@@ -50,7 +50,7 @@ module.exports = {
 		if (!soundList) {
 			message = '❌ Error while getting guild\'s sound list!';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 		}
 
 		// Get the sound
@@ -60,7 +60,7 @@ module.exports = {
 		if (!soundName) {
 			message = '❌ Sike! That\'s a wrooong number! 🔥';
 			await interaction.reply({ content: message, ephemeral: true });
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 
@@ -71,7 +71,7 @@ module.exports = {
 			guildQueue.songs.push(audio);
 			message = `☑️ **${soundName}** has been added to the queue`;
 			await interaction.reply(message);
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 
@@ -88,7 +88,7 @@ module.exports = {
 			await voiceChannel.leave();
 			message = `❌I could not join the voice channel: ${error}`;
 			await interaction.reply({ content: message, ephemeral: true });
-			console.error(message);
+			console.error(`Guild ${interaction.guild.id}: ${message}`);
 			return;
 		}
 

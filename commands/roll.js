@@ -26,6 +26,6 @@ module.exports = {
 		randNum = floor(randNum);
 		const message = `🎲 Rolled: **${randNum}**`;
 		await interaction.reply(message);
-		console.log(message);
+		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
 };

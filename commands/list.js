@@ -41,7 +41,7 @@ module.exports = {
 			}
 		}
 		await interaction.reply({ content: '🙉', ephemeral: true });
-		console.log(`Sent sound list for ${interaction.guildId}`);
+		console.log(`Guild ${interaction.guildId}: Sent sound list`);
 
 		let message = '```css\n[SOUND LIST:]\n';
 		let previousWord = soundList.get(1).split('_')[0];

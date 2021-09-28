@@ -18,6 +18,6 @@ module.exports = {
 		const player = interaction.client.globalQueue.get(interaction.guildId).player;
 		player.stop();
 		await interaction.reply({ content: message, ephemeral: true });
-		console.log(message);
+		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
 };

@@ -19,7 +19,7 @@ module.exports = {
 		if (!guildQueue) {
 			message = 'There is nothing playing.';
 			await interaction.reply(message);
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 		}
 		else {
 			message = '**Queue:**\n';
@@ -30,7 +30,7 @@ module.exports = {
 			}
 			message += `\n**Now playing:** ${guildQueue.songs[0].title}`;
 			await interaction.reply(message);
-			console.log(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
 		}
 	},
 };
