@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 const Azure = require('../helpers/Azure');
-const DataManager = require('../helpers/DataManager');
+const DataManager = require('../helpers/GuildDataManager');
 
 // --------------------------------------------------------------------
 // Sets channel used for auto-upload

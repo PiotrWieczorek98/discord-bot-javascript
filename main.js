@@ -1,7 +1,6 @@
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const ClientExtended = require('./helpers/ClientExtended.js');
-const DataManager = require('./helpers/DataManager.js');
 
 // -------------------------------------------------------------
 // Initialization
@@ -9,38 +8,6 @@ const DataManager = require('./helpers/DataManager.js');
 
 // Create a new client instance
 const client = new ClientExtended();
-
-
-// When the client is ready, run this code (only once)
-client.once('ready', () => {
-	client.user.setActivity('Loading...');
-
-	// Get data
-	(async () => {
-		await DataManager.getSoundsFromContainers(client);
-		await DataManager.getDataFromContainer(client);
-		console.log(`
-		⡿⠋⠄⣀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣌⠻⣿⣿
-		⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠹⣿
-		⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠹
-		⣿⣿⡟⢹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡛⢿⣿⣿⣿⣮⠛⣿⣿⣿⣿⣿⣿⡆
-		⡟⢻⡇⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣣⠄⡀⢬⣭⣻⣷⡌⢿⣿⣿⣿⣿⣿
-		⠃⣸⡀⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠈⣆⢹⣿⣿⣿⡈⢿⣿⣿⣿⣿
-		⠄⢻⡇⠄⢛⣛⣻⣿⣿⣿⣿⣿⣿⣿⣿⡆⠹⣿⣆⠸⣆⠙⠛⠛⠃⠘⣿⣿⣿⣿
-		⠄⠸⣡⠄⡈⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⠁⣠⣉⣤⣴⣿⣿⠿⠿⠿⡇⢸⣿⣿⣿
-		⠄⡄⢿⣆⠰⡘⢿⣿⠿⢛⣉⣥⣴⣶⣿⣿⣿⣿⣻⠟⣉⣤⣶⣶⣾⣿⡄⣿⡿⢸
-		⠄⢰⠸⣿⠄⢳⣠⣤⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣼⣿⣿⣿⣿⣿⣿⡇⢻⡇⢸
-		⢷⡈⢣⣡⣶⠿⠟⠛⠓⣚⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣇⢸⠇⠘
-		⡀⣌⠄⠻⣧⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠛⠛⠛⢿⣿⣿⣿⣿⣿⡟⠘⠄⠄
-		⣷⡘⣷⡀⠘⣿⣿⣿⣿⣿⣿⣿⣿⡋⢀⣠⣤⣶⣶⣾⡆⣿⣿⣿⠟⠁⠄⠄⠄⠄
-		⣿⣷⡘⣿⡀⢻⣿⣿⣿⣿⣿⣿⣿⣧⠸⣿⣿⣿⣿⣿⣷⡿⠟⠉⠄⠄⠄⠄⡄⢀
-		⣿⣿⣷⡈⢷⡀⠙⠛⠻⠿⠿⠿⠿⠿⠷⠾⠿⠟⣛⣋⣥⣶⣄⠄⢀⣄⠹⣦⢹⣿
-		        	BOT IS READY!`);
-	})();
-
-	client.user.setActivity('Dick Size Contest', { type: 'COMPETING' });
-});
-
 
 // Load commands
 const commandFiles = fs.readdirSync(client.paths.COMMANDS).filter(file => file.endsWith('.js'));
@@ -53,7 +20,7 @@ for (const file of commandFiles) {
 // Listeners
 // -------------------------------------------------------------
 
-// Command was used
+// Command listeners
 client.on('interactionCreate', async interaction => {
 	if (!interaction.isCommand()) return;
 	const command = client.commands.get(interaction.commandName);
@@ -68,15 +35,20 @@ client.on('interactionCreate', async interaction => {
 	}
 });
 
-// Joined new guild
-client.on('guildCreate', async guild => {
-	await DataManager.addNewGuild(guild);
-});
+// Event listeners
+const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 
-// No longer in a guild
-client.on('guildDelete', async guild => {
-	await DataManager.removeGuild(guild);
-});
+for (const file of eventFiles) {
+	const event = require(`./events/${file}`);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	}
+	else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
 
-// Login to Discord with your client's token
+// -------------------------------------------------------------
+// Login to Discord with client's token
+// -------------------------------------------------------------
 client.login(envs.TOKEN);
