@@ -13,14 +13,27 @@ class Azure {
 	 * @param {String} containerName
 	 * @param {String} path
 	 * @param {String} fileName
+	 * @param {boolean} overwrite
+	 * @param {String} uploadAs change blob name
 	 */
-	static async uploadBlob(containerName, filePath) {
-		const fileName = path.parse(filePath).base;
+	static async uploadBlob(containerName, filePath, uploadAs = null, overwrite = false) {
+
+		// Check name option
+		let fileName = null;
+		if (uploadAs == null) {
+			fileName = path.parse(filePath).base;
+		}
+		else {
+			fileName = uploadAs;
+		}
+
 		try {
 			// Check if file exists
 			if (!fs.existsSync(filePath)) {
 				console.log(`File ${filePath} does not exist!`);
-				return;
+				return new Promise((resolve) => {
+					resolve('❌');
+				});
 			}
 
 			console.log(`Uploading blob ${fileName}`);
@@ -28,31 +41,69 @@ class Azure {
 			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
 			const containerClient = blobServiceClient.getContainerClient(containerName);
 
+			// Prevent overwrite
+			if (!overwrite) {
+				for await (const blob of containerClient.listBlobsFlat()) {
+					if (blob.name == fileName) {
+						console.log('File already exists in azure!');
+						return new Promise((resolve) => {
+							resolve('⚠️');
+						});
+					}
+				}
+			}
+
 			// Create a blob client using the local file name as the name for the blob
 			const blockBlobClient = containerClient.getBlockBlobClient(fileName);
 
 			// Upload the created file
 			await blockBlobClient.uploadFile(filePath);
+			return new Promise((resolve) => {
+				resolve('👍');
+			});
 		}
 		catch (error) {
 			console.log('Failed uploading to azure!');
-			throw 'Upload failed!';
+			return new Promise((reject) => {
+				reject('❌');
+			});
 		}
 	}
 
 	/**
-	 * Download files from azure storage
+	 * Delete blob from container
+	 * @param {*} containerName
+	 * @param {*} blobName
+	 */
+	static async deleteBlob(containerName, blobName) {
+		try {
+		// Create the BlobServiceClient object which will be used to create a container client
+			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
+			const containerClient = blobServiceClient.getContainerClient(containerName);
+
+			await containerClient.deleteBlob(blobName);
+		}
+		catch (error) {
+			console.log('Failed uploading to azure!');
+			throw 'Deleting blob failed!';
+		}
+	}
+
+	/**
+	 * Download blob from azure storage
 	 * @param {String} containerName
 	 * @param {String} directory
 	 * @param {String} blobName
-	 * @param {String} fileName
+	 * @param {String} saveAs set blob name
 	 * @param {String} option
+	 * @param {boolean} overwrite
 	 */
-	static async downloadBlob(containerName, directory, blobName, fileName = '', overwrite = false) {
-		if (fileName == '') {
-			fileName = blobName;
+	static async downloadBlob(containerName, directory, blobName, saveAs = null, overwrite = false) {
+		if (saveAs == null) {
+			saveAs = blobName;
 		}
-		const fullPath = directory + fileName;
+
+		const fullPath = directory + saveAs;
 		// Prevent overwriting
 		if (fs.existsSync(fullPath) && !overwrite) {
 			console.log(`Blob ${blobName} already downloaded!`);

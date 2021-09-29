@@ -2,8 +2,9 @@
 const ClientExtended = require('./ClientExtended');
 // eslint-disable-next-line no-unused-vars
 const { Guild } = require('discord.js');
-const fs = require('fs').promises;
-const Azure = require('./Azure');
+const fsPromises = require('fs').promises;
+const https = require('https');
+const fs = require('fs');
 
 /**
  * Class used to retrieve and upload data from cloud and manage local files.
@@ -19,7 +20,7 @@ class GuildDataManager {
 	 */
 	static async writeMapToFile(map, filePath) {
 		const serializedGuilds = JSON.stringify([...map.entries()]);
-		await fs.writeFile(filePath, serializedGuilds,
+		await fsPromises.writeFile(filePath, serializedGuilds,
 			function(err) {
 				if (err) {
 					console.error('Error writing file! ', err);
@@ -39,8 +40,8 @@ class GuildDataManager {
 	 * @param {String} filePath
 	 * @returns {Promise<Map<String, String>>}
 	 */
-	static async readMap(filePath) {
-		const data = await fs.readFile(filePath,
+	static async readMapFromFile(filePath) {
+		const data = await fsPromises.readFile(filePath,
 			function(err) {
 				if (err) {
 					console.error('Error writing file! ', err);
@@ -58,32 +59,22 @@ class GuildDataManager {
 	}
 
 	/**
-	 * Adds new guild's data
-	 * @param {Guild} newGuild
+	 * Download file from given url to local storage
+	 * @param {String} url
+	 * @param {String} filePath
+	 * @param {function()} onFinish
 	 */
-	static async addNewGuild(newGuild) {
-		// Prepare data and upload
-		const client = newGuild.client;
-		client.autoUploadSoundChannel.set(newGuild.id, null);
-
-		const filePath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
-		await this.writeMapToFile(client.autoUploadSoundChannel, filePath);
-		await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
-	}
-
-	/**
-	 * Adds new guild's data
-	 * @param {Guild} oldGuild
-	 */
-	static async removeGuild(oldGuild) {
-		// Prepare data and upload
-		const client = oldGuild.client;
-		client.autoUploadSoundChannel.delete(oldGuild.id);
-
-		const filePath = `${client.paths.DATA}/${client.vars.FILE_AUTO_UPLOAD}`;
-		await this.writeMapToFile(client.autoUploadSoundChannel, filePath);
-		await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
-		await Azure.deleteContainer(oldGuild.id);
+	static async downloadFromUrl(url, filePath, onFinish) {
+		const file = fs.createWriteStream(filePath);
+		https.get(url, function(response) {
+			response.pipe(file);
+			file.on('finish', function() {
+				file.close(onFinish);
+			});
+		}).on('error', function(err) {
+			fs.unlink(filePath);
+			if (onFinish) onFinish(err.message);
+		});
 	}
 }
 

@@ -34,12 +34,8 @@ module.exports = {
 	 * @param {Interaction} interaction
 	 */
 	async execute(interaction) {
-		let soundList = null;
-		for (const entry of interaction.client.globalSoundList) {
-			if (entry.guildId == interaction.guildId) {
-				soundList = entry.soundList;
-			}
-		}
+		const soundList = interaction.client.globalSoundList.get(interaction.guildId).soundList;
+
 		await interaction.reply({ content: '🙉', ephemeral: true });
 		console.log(`Guild ${interaction.guildId}: Sent sound list`);
 

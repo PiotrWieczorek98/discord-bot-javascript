@@ -30,7 +30,8 @@ class ClientExtended extends Client {
 		// 	soundList: [],
 		//  path: filePath;
 		// };
-		this.globalSoundList = [];
+		// Map is {<guildId>, <GuildSoundList>}
+		this.globalSoundList = new Map();
 
 		// All commands are stored here
 		this.commands = new Collection();
@@ -53,6 +54,7 @@ class ClientExtended extends Client {
 			HEROKU_DINO: 'worker',
 			CONTAINER_DATA: 'data',
 			FILE_SOUNDS_CHANNEL: 'sounds-channel.json',
+			FILE_TMP_SOUND: 'tmp.mp3',
 		};
 	}
 }

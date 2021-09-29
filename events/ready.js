@@ -50,7 +50,7 @@ module.exports = {
 				const guildSoundList = new GuildSoundList(guild.id, path);
 				await guildSoundList.downloadSounds();
 
-				client.globalSoundList.push(guildSoundList);
+				client.globalSoundList.set(guild.id, guildSoundList);
 			}
 
 			// ------------------------------------------------------------
@@ -75,7 +75,7 @@ module.exports = {
 			const filePath = `${client.paths.DATA}/${client.vars.FILE_SOUNDS_CHANNEL}`;
 			let guilds = null;
 			if (files.includes(client.vars.FILE_SOUNDS_CHANNEL)) {
-				guilds = await GuildDataManager.readMap(filePath);
+				guilds = await GuildDataManager.readMapFromFile(filePath);
 				guilds.forEach((value) => {
 					client.soundsChannel.set(value[0], value[1]);
 				});
