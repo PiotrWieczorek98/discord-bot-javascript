@@ -3,7 +3,7 @@ const GuildPlayer = require('../helpers/GuildPlayer.js');
 const { AudioSourceLocal } = require('../helpers/AudioSource.js');
 const GuildQueue = require('../helpers/GuildQueue.js');
 // eslint-disable-next-line no-unused-vars
-const { Interaction } = require('discord.js');
+const { Interaction, GuildMember } = require('discord.js');
 
 // --------------------------------------------------------------------
 // Plays sound from sound list in voice chat or adds to queue

@@ -22,6 +22,7 @@ class GuildPlayer {
 			const oldSource = guildQueue.songs.shift();
 			const newSource = guildQueue.songs[0];
 			let resource = null;
+			let message = null;
 
 			// Ugly workaround for problem mentioned above
 			if (oldSource.constructor != newSource.constructor) {
@@ -37,8 +38,9 @@ class GuildPlayer {
 			}
 			discordPlayer.play(resource);
 
-			guildQueue.textChannel.send(`🔊 Playing: ${newSource.title}`);
-			console.log(`🔊 Playing: ${newSource.title}`);
+			message = `🔊 Playing: **${newSource.title}**`;
+			guildQueue.textChannel.send(message);
+			console.log(message);
 		}
 		else {
 			// Delete the queue
@@ -63,6 +65,7 @@ class GuildPlayer {
 		}
 
 		let resource = null;
+		let message = null;
 		if (song instanceof AudioSourceYoutube) {
 			const stream = await playDl.stream(song.url);
 			resource = createAudioResource(stream.stream, { inputType : stream.type });
@@ -73,9 +76,11 @@ class GuildPlayer {
 		const audioPlayer = guildQueue.player;
 		guildQueue.connection.subscribe(audioPlayer);
 		audioPlayer.play(resource);
+		// guildQueue.connection.rejoin({ selfDeaf: false });
 
-		await interaction.reply(`🎶 Playing: **${song.title}**`);
-		console.log(`🎶Playing: ${song.title}`);
+		message = `🔊 Playing: **${song.title}**`;
+		await interaction.reply(message);
+		console.log(message);
 
 		audioPlayer.on('error', error => {
 			console.error(error);

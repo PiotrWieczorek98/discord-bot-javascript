@@ -21,7 +21,7 @@ async function checkCharacterLimit(interaction, message, newLine) {
 	else {
 		message += '```';
 		await interaction.channel.send(message);
-		message = '```css\n';
+		message = `\`\`\`css\n${newLine}`;
 	}
 	return message;
 }
@@ -46,7 +46,7 @@ module.exports = {
 			const nextWord = entry[1].split('_')[0];
 			if (previousWord != nextWord) {
 				previousWord = nextWord;
-				newLine = '\n' + newLine;
+				newLine = `\n${newLine}`;
 			}
 			message = await checkCharacterLimit(interaction, message, newLine);
 		}

@@ -12,6 +12,9 @@ const { Interaction } = require('discord.js');
 // Plays sound from youtube in voice chat or adds to queue
 // --------------------------------------------------------------------
 
+/**
+ * @todo add option to play in specified channel
+ */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('youtube')
