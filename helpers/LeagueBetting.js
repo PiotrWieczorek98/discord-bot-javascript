@@ -5,7 +5,7 @@ const ClientExtended = require('./ClientExtended');
 const GuildDataManager = require('./GuildDataManager');
 
 
-class LiveBet {
+class BettingEntry {
 	/**
 	 *
 	 * @param {string} summonerName
@@ -14,8 +14,14 @@ class LiveBet {
 		this.summonerName = summonerName;
 		this.isActive = true;
 		this.jackpot = 0;
+		// const betMinute = {
+		//	 betterId: better.id,
+		//	 value: betValue,
+		//	 minute: minute,
+		// };
+		// <id, betMinute>
+		this.bets = [];
 	}
-
 }
 
 /**
@@ -73,11 +79,125 @@ const LeagueBetting = {
      * @todo Odpalenie betowani
      * @param {string} summonerName
      */
-	startBetting: async function(summonerName) {
+	newBetting: async function(summonerName) {
 		console.log('Started Betting for: ', summonerName);
 
-		const newBet = new LiveBet(summonerName);
-		this.liveBets.push(newBet);
+		const newBetting = new BettingEntry(summonerName);
+		this.liveBets.push(newBetting);
+	},
+
+	/**
+	 *
+	 * @param {GuildMember} better
+	 * @param {number} betValue
+	 * @param {string} targetSummoner
+	 * @param {number} minute
+	 */
+	addBetToJackpot: function(better, betValue, targetSummoner, minute) {
+		let message = null;
+
+		for (const liveBet in this.liveBets) {
+			if (liveBet.summonerName == targetSummoner && liveBet.isActive == true) {
+				const betterCredits = this.betters.get(better.id);
+
+				// Check credit account
+				if (betterCredits < betValue) {
+					message = 'Not enough credits!';
+				}
+				else {
+					this.betters.set(better.id, betterCredits - betValue);
+					liveBet.jackpot += betValue;
+
+					const bet = {
+						betterId: better.id,
+						betterName: better.displayName,
+						value: betValue,
+						minute: minute,
+					};
+					liveBet.bets.push(bet);
+
+					message = `**${better.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}** minute.`;
+				}
+
+			}
+		}
+
+		return message;
+	},
+
+	/**
+	 *
+	 * @param {string} targetSummoner
+	 * @param {number} minute
+	 * @returns
+	 */
+	endBetting: function(targetSummoner, deathMinute) {
+		let message = null;
+
+		// const bet = {
+		//	 betterId: better.id,
+		//	 betterName: better.name,
+		//	 value: betValue,
+		//	 minute: minute,
+		// };
+
+		for (const liveBet in this.liveBets) {
+			// Find betting
+			if (liveBet.summonerName == targetSummoner && liveBet.isActive == true) {
+				liveBet.isActive = false;
+
+				if (liveBet.bets.length == 0) {
+					message = 'No bets sent!';
+					return message;
+				}
+
+
+				// Find winners
+				let winners = [this.liveBets.bets[0]];
+				const losers = [];
+				for (const entry in this.liveBets.bets) {
+					if (Math.abs(entry.minute - deathMinute) < Math.abs(winners[0].minute - deathMinute)) {
+
+						for (const nowLoser in winners) {
+							losers.push(nowLoser);
+						}
+						winners = [];
+						winners.push(entry);
+					}
+					else if (Math.abs(entry.minute - deathMinute) == Math.abs(winners.minute - deathMinute)) {
+						winners.push(entry);
+					}
+					else {
+						losers.push(entry);
+					}
+				}
+
+				// Calculate prize
+				let denominator = 0;
+				for (const winner in winners) {
+					denominator += winner.value;
+				}
+
+				// Give prize
+				message = '**Winners:**';
+				for (const winner in winners) {
+					const multiplier = winner.value / denominator;
+					const prize = liveBet.jackpot * multiplier;
+					const newCredits = this.betters.get(winner.betterId) + prize;
+					this.betters.set(winner.betterId, newCredits);
+					message += ` ${winner.betterName}, won ${prize},`;
+				}
+
+				message += '**\nLosers:**';
+				for (const loser in losers) {
+					message += ` ${loser.betterName}, lost ${loser.value},`;
+				}
+
+			}
+			break;
+		}
+
+		return message;
 	},
 
 	/**

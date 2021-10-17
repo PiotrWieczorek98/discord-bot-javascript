@@ -18,6 +18,10 @@ module.exports = {
 		.addStringOption(option => option
 			.setName('summoner')
 			.setDescription('Summoner name of the target')
+			.setRequired(true))
+		.addIntegerOption(option => option
+			.setName('minute')
+			.setDescription('Minute of the game in which the target will die')
 			.setRequired(true)),
 	/**
 	 * @param {Interaction} interaction
@@ -26,8 +30,9 @@ module.exports = {
 
 		const bet = interaction.options.getInteger('value');
 		const summoner = interaction.options.getString('summoner');
-		const message = `${bet},  ${summoner}`;
-		await interaction.reply('bip');
+		const minute = interaction.options.getInteger('minute');
+		const message = LeagueBetting.addBet(interaction.member, bet, summoner, minute);
+		await interaction.reply(message);
 		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
 };
