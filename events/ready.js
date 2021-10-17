@@ -4,6 +4,7 @@ const GuildSoundList = require('../helpers/GuildSoundList.js');
 const fs = require('fs');
 const Azure = require('../helpers/Azure');
 const GuildDataManager = require('../helpers/GuildDataManager');
+const LeagueBetting = require('../helpers/LeagueBetting.js');
 
 // --------------------------------------------------------------------
 // Run once bot is ready
@@ -71,10 +72,11 @@ module.exports = {
 			const filesMap = await Azure.downloadAllBlobs(client.vars.CONTAINER_DATA, client.paths.DATA, true);
 			const files = [... filesMap.values()];
 
-			// Load data
-			const filePath = `${client.paths.DATA}/${client.vars.FILE_SOUNDS_CHANNEL}`;
+			// Load sound channels data
+			let fileName = client.vars.FILE_SOUNDS_CHANNEL;
+			let filePath = `${client.paths.DATA}/${fileName}`;
 			let guilds = null;
-			if (files.includes(client.vars.FILE_SOUNDS_CHANNEL)) {
+			if (files.includes(fileName)) {
 				guilds = await GuildDataManager.readMapFromFile(filePath);
 				guilds.forEach((value) => {
 					client.soundsChannel.set(value[0], value[1]);
@@ -87,9 +89,29 @@ module.exports = {
 					guilds.set(guild.id, null);
 					client.soundsChannel.set(guild.id, null);
 				});
-				await this.writeMapToFile(guilds, filePath);
+				await GuildDataManager.writeMapToFile(guilds, filePath);
 				await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
 			}
+
+			// DELETE THIS IF YOU FORKED THIS REPO
+			// Load League betting data
+			LeagueBetting.constructor(client, 100);
+			fileName = client.vars.FILE_BETTERS;
+			filePath = `${client.paths.DATA}/${fileName}`;
+			let betters = null;
+			if (files.includes(fileName)) {
+				betters = await GuildDataManager.readMapFromFile(filePath);
+				betters.forEach((value) => {
+					LeagueBetting.betters.set(value[0], value[1]);
+				});
+			}
+			else {
+				// Prepare empty data and upload
+				betters = new Map();
+				await GuildDataManager.writeMapToFile(betters, filePath);
+				await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
+			}
+
 			console.log('Guilds\' data loaded\n');
 
 			// ------------------------------------------------------------

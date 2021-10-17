@@ -1,6 +1,7 @@
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
 const ClientExtended = require('./helpers/ClientExtended.js');
+const LeagueBetting = require('./helpers/LeagueBetting.js');
 
 // -------------------------------------------------------------
 // Initialization
@@ -47,6 +48,9 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
+
+// Set endpoints
+LeagueBetting.setListener(3000);
 
 // -------------------------------------------------------------
 // Login to Discord with client's token

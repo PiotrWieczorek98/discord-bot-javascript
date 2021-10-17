@@ -54,7 +54,7 @@ class ClientExtended extends Client {
 			HEROKU_DINO: 'worker',
 			CONTAINER_DATA: 'data',
 			FILE_SOUNDS_CHANNEL: 'sounds-channel.json',
-			FILE_TMP_SOUND: 'tmp.mp3',
+			FILE_BETTERS: 'betters.json',
 		};
 	}
 }

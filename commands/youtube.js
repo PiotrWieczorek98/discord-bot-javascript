@@ -62,47 +62,43 @@ module.exports = {
 			type: 'video',
 		};
 
-		await search(phrase.replace(/<(.+)>/g, '$1'), opts, async function(err, results) {
-			if (err) {
-				console.log(err);
-			}
-			video = results[0];
+		const videos = await search(phrase.replace(/<(.+)>/g, '$1'), opts);
+		video = videos.results[0];
 
-			if (!video) {
-				message = '❌ No results!';
-				await interaction.reply({ content: message, ephemeral: true });
-				console.log(`Guild ${interaction.guild.id}: ${message}`);
-				return;
-			}
+		if (!video) {
+			message = '❌ No results!';
+			await interaction.reply({ content: message, ephemeral: true });
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
+			return;
+		}
 
-			// Add to queue
-			const audio = new AudioSourceYoutube(video.id, Util.escapeMarkdown(video.title), video.link);
-			let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
-			if (guildQueue) {
-				guildQueue.songs.push(audio);
-				message = `☑️ **${audio.title}** has been added to the queue`;
-				await interaction.reply(message);
-				console.log(`Guild ${interaction.guild.id}: ${message}`);
-				return;
-			}
+		// Add to queue
+		const audio = new AudioSourceYoutube(video.id, Util.escapeMarkdown(video.title), video.link);
+		let guildQueue = interaction.client.globalQueue.get(interaction.member.guild.id);
+		if (guildQueue) {
+			guildQueue.songs.push(audio);
+			message = `☑️ **${audio.title}** has been added to the queue`;
+			await interaction.reply(message);
+			console.log(`Guild ${interaction.guild.id}: ${message}`);
+			return;
+		}
 
-			// Join VC
-			try {
-				// Create queue if doesn't exist
-				guildQueue = new GuildQueue(interaction.channel, voiceChannel);
-				interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
-				guildQueue.songs.push(audio);
-				// Call player function
-				GuildPlayer.playAudio(interaction, guildQueue);
-			}
-			catch (error) {
-				message = `I could not join the voice channel: ${error}`;
-				console.error(`Guild ${interaction.guild.id}: ${message}`);
-				interaction.client.globalQueue.delete(interaction.guild.id);
-				await voiceChannel.leave();
-				await interaction.reply(message);
-				return;
-			}
-		});
+		// Join VC
+		try {
+			// Create queue if doesn't exist
+			guildQueue = new GuildQueue(interaction.channel, voiceChannel);
+			interaction.client.globalQueue.set(interaction.guild.id, guildQueue);
+			guildQueue.songs.push(audio);
+			// Call player function
+			GuildPlayer.playAudio(interaction, guildQueue);
+		}
+		catch (error) {
+			message = `I could not join the voice channel: ${error}`;
+			console.error(`Guild ${interaction.guild.id}: ${message}`);
+			interaction.client.globalQueue.delete(interaction.guild.id);
+			await voiceChannel.leave();
+			await interaction.reply(message);
+			return;
+		}
 	},
 };
