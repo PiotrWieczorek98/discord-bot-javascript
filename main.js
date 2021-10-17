@@ -50,6 +50,7 @@ for (const file of eventFiles) {
 }
 
 // Set endpoints
+LeagueBetting.constructor(client, 100);
 LeagueBetting.setListener(3000);
 
 // -------------------------------------------------------------

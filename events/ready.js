@@ -96,6 +96,8 @@ module.exports = {
 			// DELETE THIS IF YOU FORKED THIS REPO
 			// Load League betting data
 			LeagueBetting.constructor(client, 100);
+			LeagueBetting.setListener(3000);
+
 			fileName = client.vars.FILE_BETTERS;
 			filePath = `${client.paths.DATA}/${fileName}`;
 			let betters = null;

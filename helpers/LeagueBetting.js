@@ -48,6 +48,7 @@ const LeagueBetting = {
 	 * @param {number} credits
 	 */
 	constructor: function(client, credits) {
+		this.app.use(express.json());
 		this.fileName = client.vars.FILE_BETTERS;
 		this.filePath = `${client.paths.DATA}/${this.fileName}`;
 		this.container = client.vars.CONTAINER_DATA;
