@@ -1,5 +1,6 @@
 const { GuildMember, Interaction } = require('discord.js');
 const express = require('express');
+const { toInteger } = require('lodash');
 const Azure = require('./Azure');
 const ClientExtended = require('./ClientExtended');
 const GuildDataManager = require('./GuildDataManager');
@@ -14,8 +15,9 @@ class BettingEntry {
 		this.summonerName = summonerName;
 		this.isActive = true;
 		this.jackpot = 0;
-		// const betMinute = {
+		// const bet = {
 		//	 betterId: better.id,
+		// betterName: name,
 		//	 value: betValue,
 		//	 minute: minute,
 		// };
@@ -63,13 +65,9 @@ const LeagueBetting = {
 
 	/**
 	 * Update betting data
-	 * @param {Map<string, number>} betters
+	 * @param {{}} betters
 	 */
-	updateBetters: async function(betters) {
-		for (const better in betters) {
-			this.betters.set(better[0], better[1]);
-		}
-
+	updateBetters: async function() {
 		await GuildDataManager.writeMapToFile(LeagueBetting.betters, this.filePath);
 		await Azure.uploadBlob(this.container, this.filePath, undefined, true);
 		console.log('Betters list updated.');
@@ -79,7 +77,7 @@ const LeagueBetting = {
      * @todo Odpalenie betowani
      * @param {string} summonerName
      */
-	newBetting: async function(summonerName) {
+	startBetting: async function(summonerName) {
 		console.log('Started Betting for: ', summonerName);
 
 		const newBetting = new BettingEntry(summonerName);
@@ -133,7 +131,10 @@ const LeagueBetting = {
 	 */
 	endBetting: function(targetSummoner, deathMinute) {
 		let message = null;
-
+		if (deathMinute == 0) {
+			message = `Pog, ${targetSummoner} didn't die! Everyone lost!`;
+			return message;
+		}
 		// const bet = {
 		//	 betterId: better.id,
 		//	 betterName: better.name,
@@ -193,6 +194,8 @@ const LeagueBetting = {
 					message += ` ${loser.betterName}, lost ${loser.value},`;
 				}
 
+				this.updateBetters();
+
 			}
 			break;
 		}
@@ -208,17 +211,32 @@ const LeagueBetting = {
 		this.app.use(express.json());
 
 		this.app.post('/death', (req, res) => {
-			const body = req.body;
-			console.log(body);
-			res.send(body);
+			const summoner = req.body.name;
+			const time = parseInt(req.body.time);
+			const minute = Math.ceil(time / 60);
+			this.endBetting(summoner, minute);
+
+			console.log(req);
+			res.send('ok');
 
 		});
 		this.app.post('/game_started', (req, res) => {
+			const summoner = req.body.name;
+			this.startBetting(summoner);
 
-			const events = req.body;
-			console.log(events);
-			res.send(events);
+			const message = `Started betting for: **${summoner}**`;
+			console.log(req.body);
+			console.log(message);
+			res.body = message;
+			res.send(res);
 
+		});
+		this.app.post('/game_ended', (req, res) => {
+			const summoner = req.body.name;
+			this.endBetting(summoner, 0);
+
+			console.log(req);
+			res.send('ok');
 		});
 
 		const listeningPort = process.env.PORT || port;
