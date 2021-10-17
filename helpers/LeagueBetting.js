@@ -11,7 +11,7 @@ class BettingEntry {
 	 *
 	 * @param {string} summonerName
 	 */
-	constructor(summonerName) {
+	constructor(summonerName, channelId) {
 		this.summonerName = summonerName;
 		this.isActive = true;
 		this.jackpot = 0;
@@ -23,6 +23,7 @@ class BettingEntry {
 		// };
 		// <id, betMinute>
 		this.bets = [];
+		this.channelId = channelId;
 	}
 }
 
@@ -39,6 +40,7 @@ const LeagueBetting = {
 	fileName: null,
 	filePath: null,
 	container: null,
+	client: null,
 
 	/**
 	 * Singleton constructor
@@ -50,6 +52,7 @@ const LeagueBetting = {
 		this.filePath = `${client.paths.DATA}/${this.fileName}`;
 		this.container = client.vars.CONTAINER_DATA;
 		this.initialCredits = credits;
+		this.client = client;
 	},
 
 	/**
@@ -76,11 +79,12 @@ const LeagueBetting = {
 	/**
      * @todo Odpalenie betowani
      * @param {string} summonerName
+     * @param {string} channelId
      */
-	startBetting: async function(summonerName) {
+	startBetting: async function(summonerName, channelId) {
 		console.log('Started Betting for: ', summonerName);
 
-		const newBetting = new BettingEntry(summonerName);
+		const newBetting = new BettingEntry(summonerName, channelId);
 		this.liveBets.push(newBetting);
 	},
 
@@ -144,7 +148,7 @@ const LeagueBetting = {
 
 		for (const liveBet in this.liveBets) {
 			// Find betting
-			if (liveBet.summonerName == targetSummoner && liveBet.isActive == true) {
+			if (liveBet.summonerName == targetSummoner && !liveBet.isActive) {
 				liveBet.isActive = false;
 
 				if (liveBet.bets.length == 0) {
@@ -210,27 +214,41 @@ const LeagueBetting = {
 	setListener: async function(port) {
 		this.app.use(express.json());
 
-		this.app.post('/death', (req, res) => {
-			const summoner = req.body.name;
-			const time = parseInt(req.body.time);
-			const minute = Math.ceil(time / 60);
-			this.endBetting(summoner, minute);
-
-			console.log(req);
-			res.send('ok');
-
-		});
 		this.app.post('/game_started', (req, res) => {
-			const summoner = req.body.name;
-			this.startBetting(summoner);
+			const summoner = req.body.SummonerName;
+			const channelId = req.body.ChannelId;
+
+			this.startBetting(summoner, channelId);
 
 			const message = `Started betting for: **${summoner}**`;
-			console.log(req.body);
-			console.log(message);
-			res.body = message;
-			res.send(res);
+			console.log('Received /game_started request for ', summoner);
+
+			// SEND CHANNEL MESSAGE
+			this.client.channels.cache.get(channelId).send(message);
+
+			res.send({ status: 'ok' });
 
 		});
+
+		this.app.post('/death', (req, res) => {
+			const summoner = req.body.VictimName;
+
+			for (const entry in this.liveBets) {
+				if (entry.summonerName == summoner && entry.isActive) {
+					const time = parseInt(req.body.EventTime);
+					const minute = Math.ceil(time / 60);
+					const message = this.endBetting(summoner, minute);
+
+					// SEND CHANNEL MESSAGE
+					this.client.channels.cache.get(entry.channelId).send(message);
+				}
+			}
+
+			console.log('Received /death request for ', summoner);
+			res.send({ status: 'ok' });
+
+		});
+
 		this.app.post('/game_ended', (req, res) => {
 			const summoner = req.body.name;
 			this.endBetting(summoner, 0);
