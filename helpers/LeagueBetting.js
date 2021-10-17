@@ -212,11 +212,11 @@ const LeagueBetting = {
      * @param {number} port
      */
 	setListener: async function(port) {
-		this.app.use(express.json());
 
 		this.app.post('/game_started', (req, res) => {
-			const summoner = req.body.SummonerName;
-			const channelId = req.body.ChannelId;
+			const data = JSON.parse(req.body);
+			const summoner = data.SummonerName;
+			const channelId = data.ChannelId;
 
 			this.startBetting(summoner, channelId);
 
@@ -231,11 +231,12 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/death', (req, res) => {
-			const summoner = req.body.VictimName;
+			const data = JSON.parse(req.body);
+			const summoner = data.VictimName;
 
 			for (const entry in this.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
-					const time = parseInt(req.body.EventTime);
+					const time = parseInt(data.EventTime);
 					const minute = Math.ceil(time / 60);
 					const message = this.endBetting(summoner, minute);
 
@@ -250,7 +251,8 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/game_ended', (req, res) => {
-			const summoner = req.body.VictimName;
+			const data = JSON.parse(req.body);
+			const summoner = data.VictimName;
 
 			for (const entry in this.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
@@ -266,10 +268,10 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/ping', (req, res) => {
-			const body = req.body;
+			const data = JSON.parse(req.body);
 
-			console.log('Received /ping request for ', body);
-			res.send(body);
+			console.log('Received /ping request for ', data);
+			res.send(data);
 		});
 
 		const listeningPort = process.env.PORT || port;
