@@ -1,8 +1,22 @@
-const { GuildMember } = require('discord.js');
+const { GuildMember, Interaction } = require('discord.js');
 const express = require('express');
 const Azure = require('./Azure');
 const ClientExtended = require('./ClientExtended');
 const GuildDataManager = require('./GuildDataManager');
+
+
+class LiveBet {
+	/**
+	 *
+	 * @param {string} summonerName
+	 */
+	constructor(summonerName) {
+		this.summonerName = summonerName;
+		this.isActive = true;
+		this.jackpot = 0;
+	}
+
+}
 
 /**
  * PERSONAL FUNCTION, REQUIRES SEPERATE CLIENT FOR USERS
@@ -12,8 +26,8 @@ const LeagueBetting = {
 
 	app: express(),
 	betters: new Map(),
+	liveBets: [],
 	initialCredits: null,
-	// client: null,
 	fileName: null,
 	filePath: null,
 	container: null,
@@ -24,7 +38,6 @@ const LeagueBetting = {
 	 * @param {number} credits
 	 */
 	constructor: function(client, credits) {
-		// this.client = client;
 		this.fileName = client.vars.FILE_BETTERS;
 		this.filePath = `${client.paths.DATA}/${this.fileName}`;
 		this.container = client.vars.CONTAINER_DATA;
@@ -58,11 +71,13 @@ const LeagueBetting = {
 
 	/**
      * @todo Odpalenie betowani
-     * @param {string} username
+     * @param {string} summonerName
      */
-	startBetting: async function(username) {
-		console.log('Started Betting for: ', username);
+	startBetting: async function(summonerName) {
+		console.log('Started Betting for: ', summonerName);
 
+		const newBet = new LiveBet(summonerName);
+		this.liveBets.push(newBet);
 	},
 
 	/**
@@ -75,18 +90,19 @@ const LeagueBetting = {
 		this.app.post('/death', (req, res) => {
 			const events = req.body.Events;
 			console.log(events);
-			res.send(events);
+			res.send('ok');
 
 		});
 		this.app.post('/game_started', (req, res) => {
 
-			const events = req.body.name;
-			console.log(req.body.name);
+			const events = req.body;
+			console.log(events);
 			res.send(events);
 
 		});
 
-		this.app.listen(process.env.PORT || port, () => console.log('Listening on port: ', port));
+		const listeningPort = process.env.PORT || port;
+		this.app.listen(listeningPort, () => console.log('Listening on port: ', listeningPort));
 	},
 
 };
