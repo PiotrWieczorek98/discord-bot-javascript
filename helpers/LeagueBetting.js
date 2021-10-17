@@ -156,6 +156,13 @@ const LeagueBetting = {
 
 				if (liveBet.bets.length < 2) {
 					message = `**${targetSummoner}** died at **${deathMinute}** minute but not enough bets were sent!`;
+					// Return bets
+					if (liveBet.bets.length == 1) {
+						const better = liveBet.bets[0];
+						const credits = this.betters.get(better.id) + better.betValue;
+						this.betters.set(credits);
+						this.updateBetters();
+					}
 					return message;
 				}
 				message = `**${targetSummoner}** died at **${deathMinute}** minute!`;
