@@ -88,9 +88,9 @@ const LeagueBetting = {
 		this.app.use(express.json());
 
 		this.app.post('/death', (req, res) => {
-			const events = req.body.Events;
-			console.log(events);
-			res.send('ok');
+			const body = req.body;
+			console.log(body);
+			res.send(body);
 
 		});
 		this.app.post('/game_started', (req, res) => {
