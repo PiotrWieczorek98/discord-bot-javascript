@@ -250,11 +250,26 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/game_ended', (req, res) => {
-			const summoner = req.body.name;
-			this.endBetting(summoner, 0);
+			const summoner = req.body.VictimName;
 
-			console.log(req);
-			res.send('ok');
+			for (const entry in this.liveBets) {
+				if (entry.summonerName == summoner && entry.isActive) {
+					const message = this.endBetting(summoner, 0);
+
+					// SEND CHANNEL MESSAGE
+					this.client.channels.cache.get(entry.channelId).send(message);
+				}
+			}
+
+			console.log('Received /death request for ', summoner);
+			res.send({ status: 'ok' });
+		});
+
+		this.app.post('/ping', (req, res) => {
+			const body = req.body;
+
+			console.log('Received /ping request for ', body);
+			res.send(body);
 		});
 
 		const listeningPort = process.env.PORT || port;
