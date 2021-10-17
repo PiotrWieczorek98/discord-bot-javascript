@@ -215,7 +215,7 @@ const LeagueBetting = {
 	setListener: async function(port) {
 
 		this.app.post('/game_started', (req, res) => {
-			const data = JSON.parse(req.body);
+			const data = req.body;
 			const summoner = data.SummonerName;
 			const channelId = data.ChannelId;
 
@@ -232,7 +232,7 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/death', (req, res) => {
-			const data = JSON.parse(req.body);
+			const data = req.body;
 			const summoner = data.VictimName;
 
 			for (const entry in this.liveBets) {
@@ -252,7 +252,7 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/game_ended', (req, res) => {
-			const data = JSON.parse(req.body);
+			const data = req.body;
 			const summoner = data.VictimName;
 
 			for (const entry in this.liveBets) {
@@ -269,7 +269,7 @@ const LeagueBetting = {
 		});
 
 		this.app.post('/ping', (req, res) => {
-			const data = JSON.parse(req.body);
+			const data = req.body;
 
 			console.log('Received /ping request for ', data);
 			res.send(data);

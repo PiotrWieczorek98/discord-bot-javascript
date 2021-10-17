@@ -49,10 +49,6 @@ for (const file of eventFiles) {
 	}
 }
 
-// Set endpoints
-LeagueBetting.constructor(client, 100);
-LeagueBetting.setListener(3000);
-
 // -------------------------------------------------------------
 // Login to Discord with client's token
 // -------------------------------------------------------------
