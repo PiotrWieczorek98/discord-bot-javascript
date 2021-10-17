@@ -150,7 +150,7 @@ const LeagueBetting = {
 
 		for (const liveBet of this.liveBets) {
 			// Find betting
-			if (liveBet.summonerName == targetSummoner && !liveBet.isActive) {
+			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
 				liveBet.isActive = false;
 
 				if (liveBet.bets.length == 0) {
@@ -244,6 +244,7 @@ const LeagueBetting = {
 
 					// SEND CHANNEL MESSAGE
 					this.client.channels.cache.get(entry.channelId).send(message);
+					break;
 				}
 			}
 
