@@ -168,10 +168,10 @@ const LeagueBetting = {
 				message = `**${targetSummoner}** died at **${deathMinute}** minute!`;
 
 				// Find winners
-				let winners = [this.liveBets.bets[0]];
+				let winners = [];
 				const losers = [];
-				for (const entry of this.liveBets.bets) {
-					if (Math.abs(entry.minute - deathMinute) < Math.abs(winners[0].minute - deathMinute)) {
+				for (const entry of liveBet.bets) {
+					if (winners[0] == null || Math.abs(entry.minute - deathMinute) < Math.abs(winners[0].minute - deathMinute)) {
 
 						for (const nowLoser of winners) {
 							losers.push(nowLoser);
@@ -200,12 +200,12 @@ const LeagueBetting = {
 					const prize = liveBet.jackpot * multiplier;
 					const newCredits = this.betters.get(winner.betterId) + prize;
 					this.betters.set(winner.betterId, newCredits);
-					message += ` ${winner.betterName}, won ${prize},\n`;
+					message += ` **${winner.betterName}**, won: **${prize}**,`;
 				}
 
 				message += '**\nLosers: **';
 				for (const loser of losers) {
-					message += ` ${loser.betterName}, lost ${loser.value},\n`;
+					message += ` **${loser.betterName}**, lost **${loser.value}**,`;
 				}
 
 				this.updateBetters();
