@@ -107,21 +107,22 @@ const LeagueBetting = {
 				// Check credit account
 				if (betterCredits < betValue) {
 					message = 'Not enough credits!';
+					return message;
 				}
-				else {
-					this.betters.set(better.id, betterCredits - betValue);
-					liveBet.jackpot += betValue;
 
-					const bet = {
-						betterId: better.id,
-						betterName: better.displayName,
-						value: betValue,
-						minute: minute,
-					};
-					liveBet.bets.push(bet);
+				this.betters.set(better.id, betterCredits - betValue);
+				liveBet.jackpot += betValue;
 
-					message = `**${better.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}** minute.`;
-				}
+				const bet = {
+					betterId: better.id,
+					betterName: better.displayName,
+					value: betValue,
+					minute: minute,
+				};
+				liveBet.bets.push(bet);
+
+				message = `**${better.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}** minutes.`;
+
 
 			}
 		}
@@ -153,11 +154,11 @@ const LeagueBetting = {
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
 				liveBet.isActive = false;
 
-				if (liveBet.bets.length == 0) {
-					message = 'No bets sent!';
+				if (liveBet.bets.length < 2) {
+					message = `**${targetSummoner}** died at **${deathMinute}** minute but not enough bets were sent!`;
 					return message;
 				}
-
+				message = `**${targetSummoner}** died at **${deathMinute}** minute!`;
 
 				// Find winners
 				let winners = [this.liveBets.bets[0]];
@@ -186,18 +187,18 @@ const LeagueBetting = {
 				}
 
 				// Give prize
-				message = '**Winners:**';
+				message += '\n**Winners: **';
 				for (const winner of winners) {
 					const multiplier = winner.value / denominator;
 					const prize = liveBet.jackpot * multiplier;
 					const newCredits = this.betters.get(winner.betterId) + prize;
 					this.betters.set(winner.betterId, newCredits);
-					message += ` ${winner.betterName}, won ${prize},`;
+					message += ` ${winner.betterName}, won ${prize},\n`;
 				}
 
-				message += '**\nLosers:**';
+				message += '**\nLosers: **';
 				for (const loser of losers) {
-					message += ` ${loser.betterName}, lost ${loser.value},`;
+					message += ` ${loser.betterName}, lost ${loser.value},\n`;
 				}
 
 				this.updateBetters();
@@ -209,6 +210,10 @@ const LeagueBetting = {
 		return message;
 	},
 
+	// ------------------------------------------------------------------------------------
+	// ENDPOINTS
+	// ------------------------------------------------------------------------------------
+
 	/**
      *
      * @param {number} port
@@ -219,11 +224,26 @@ const LeagueBetting = {
 			const data = req.body;
 			const summoner = data.SummonerName;
 			const channelId = data.ChannelId;
+			let message = null;
+			// Avoid duplicate
+			let foundDuplicate = false;
+			for (const entry of this.liveBets) {
+				if (entry.summonerName == summoner && entry.isActive) {
+					foundDuplicate = true;
+				}
+			}
 
-			this.startBetting(summoner, channelId);
+			if (!foundDuplicate) {
+				this.startBetting(summoner, channelId);
 
-			const message = `Started betting for: **${summoner}**`;
-			console.log('Received /game_started request for ', summoner);
+				message = `Started betting for: **${summoner}**`;
+				console.log('Received /game_started request for ', summoner);
+			}
+			else {
+				message = `Duplicate betting for: **${summoner}**, Betting cancelled`;
+				console.log('Received duplicate /game_started request for ', summoner);
+			}
+
 
 			// SEND CHANNEL MESSAGE
 			this.client.channels.cache.get(channelId).send(message);
