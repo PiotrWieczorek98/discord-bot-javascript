@@ -31,7 +31,7 @@ module.exports = {
 		const bet = interaction.options.getInteger('value');
 		const summoner = interaction.options.getString('summoner');
 		const minute = interaction.options.getInteger('minute');
-		const message = LeagueBetting.addBet(interaction.member, bet, summoner, minute);
+		const message = LeagueBetting.addBetToJackpot(interaction.member, bet, summoner, minute);
 		await interaction.reply(message);
 		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},

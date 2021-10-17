@@ -10,6 +10,7 @@ class BettingEntry {
 	/**
 	 *
 	 * @param {string} summonerName
+	 * @param {string} channelId
 	 */
 	constructor(summonerName, channelId) {
 		this.summonerName = summonerName;
@@ -99,8 +100,8 @@ const LeagueBetting = {
 	addBetToJackpot: function(better, betValue, targetSummoner, minute) {
 		let message = null;
 
-		for (const liveBet in this.liveBets) {
-			if (liveBet.summonerName == targetSummoner && liveBet.isActive == true) {
+		for (const liveBet of this.liveBets) {
+			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
 				const betterCredits = this.betters.get(better.id);
 
 				// Check credit account
@@ -147,7 +148,7 @@ const LeagueBetting = {
 		//	 minute: minute,
 		// };
 
-		for (const liveBet in this.liveBets) {
+		for (const liveBet of this.liveBets) {
 			// Find betting
 			if (liveBet.summonerName == targetSummoner && !liveBet.isActive) {
 				liveBet.isActive = false;
@@ -161,10 +162,10 @@ const LeagueBetting = {
 				// Find winners
 				let winners = [this.liveBets.bets[0]];
 				const losers = [];
-				for (const entry in this.liveBets.bets) {
+				for (const entry of this.liveBets.bets) {
 					if (Math.abs(entry.minute - deathMinute) < Math.abs(winners[0].minute - deathMinute)) {
 
-						for (const nowLoser in winners) {
+						for (const nowLoser of winners) {
 							losers.push(nowLoser);
 						}
 						winners = [];
@@ -180,13 +181,13 @@ const LeagueBetting = {
 
 				// Calculate prize
 				let denominator = 0;
-				for (const winner in winners) {
+				for (const winner of winners) {
 					denominator += winner.value;
 				}
 
 				// Give prize
 				message = '**Winners:**';
-				for (const winner in winners) {
+				for (const winner of winners) {
 					const multiplier = winner.value / denominator;
 					const prize = liveBet.jackpot * multiplier;
 					const newCredits = this.betters.get(winner.betterId) + prize;
@@ -195,7 +196,7 @@ const LeagueBetting = {
 				}
 
 				message += '**\nLosers:**';
-				for (const loser in losers) {
+				for (const loser of losers) {
 					message += ` ${loser.betterName}, lost ${loser.value},`;
 				}
 
@@ -235,7 +236,7 @@ const LeagueBetting = {
 			const data = req.body;
 			const summoner = data.VictimName;
 
-			for (const entry in this.liveBets) {
+			for (const entry of this.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
 					const time = parseInt(data.EventTime);
 					const minute = Math.ceil(time / 60);
@@ -255,7 +256,7 @@ const LeagueBetting = {
 			const data = req.body;
 			const summoner = data.VictimName;
 
-			for (const entry in this.liveBets) {
+			for (const entry of this.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
 					const message = this.endBetting(summoner, 0);
 
