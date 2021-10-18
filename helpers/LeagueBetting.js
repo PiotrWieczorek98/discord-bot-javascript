@@ -81,7 +81,7 @@ const LeagueBetting = {
 		this.gamblers.set(gambler.id, this.initialCredits);
 
 		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.filePath);
-		await Azure.uploadBlob(this.container, this.filePath, undefined, true);
+		await Azure.uploadBlob(this.container, this.filePath, null, true);
 	},
 
 	/**
@@ -99,7 +99,7 @@ const LeagueBetting = {
 	 */
 	updateGamblers: async function() {
 		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.filePath);
-		await Azure.uploadBlob(this.container, this.filePath, undefined, true);
+		await Azure.uploadBlob(this.container, this.filePath, null, true);
 		console.log('Betters list updated.');
 	},
 
@@ -243,12 +243,30 @@ const LeagueBetting = {
 					message += ` ** ${loser.gamblerName}** - ${loser.value},`;
 				}
 
-				this.updateGamblers();
+				this.updateGamblers(liveBet);
+				this.logBetting(liveBet);
 				break;
 			}
 		}
 
 		return message;
+	},
+
+	logBetting: function(liveBet) {
+		const fs = require('fs');
+		const filePath = `${this.client.paths.DATA}/${this.client.vars.FILE_BETS}`;
+		let row = `${liveBet.summonerName};`;
+		for (const entry of liveBet.bets) {
+			row += `${entry.gamblerName};${entry.value};${entry.minute};`;
+		}
+		row += '\n';
+
+		fs.appendFile(filePath, row, function(err) {
+			if (err) throw err;
+			console.log('Saved log: ', row);
+		});
+
+		Azure.uploadBlob(this.container, filePath, null, true);
 	},
 
 	// ------------------------------------------------------------------------------------

@@ -55,6 +55,7 @@ class ClientExtended extends Client {
 			CONTAINER_DATA: 'data',
 			FILE_SOUNDS_CHANNEL: 'sounds-channel.json',
 			FILE_GAMBLERS: 'gamblers.json',
+			FILE_BETS: 'bets.csv',
 		};
 	}
 }
