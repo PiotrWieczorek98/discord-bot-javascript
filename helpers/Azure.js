@@ -87,7 +87,7 @@ class Azure {
 			// Prevent overwrite
 			if (!overwrite) {
 				for await (const blob of containerClient.listBlobsFlat()) {
-					if (blob.name == uploadAs) {
+					if (blob.name == filePath) {
 						console.log('File already exists in azure!');
 						return new Promise((resolve) => {
 							resolve('⚠️');
