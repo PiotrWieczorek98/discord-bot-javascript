@@ -7,9 +7,22 @@ const ordinalSuffixOf = require('./ordinalSuffixOf');
 const { MessageEmbed } = require('discord.js');
 const wait = require('./wait');
 
+// ------------------------------------------------------------------------------------
+// PERSONAL FUNCTIONALITY, REQUIRES SEPERATE CLIENT FOR USERS
+// DELETE THIS FILE IF UNCERTAIN
+// ------------------------------------------------------------------------------------
+
+
+/**
+ * Class representing a single betting event
+ */
 class BettingEntry {
 	/**
-	 *
+	 *this.betArrayEntry = {
+	 * gamblerId: gambler.id,
+	 * gamblerName: name,
+	 * value: betValue,
+	 * minute: minute,};
 	 * @param {string} summonerName
 	 * @param {string} channelId
 	 */
@@ -18,13 +31,6 @@ class BettingEntry {
 		this.isActive = true;
 		this.bettingAllowed = true;
 		this.jackpot = 0;
-		// const bet = {
-		//	 gamblerId: gambler.id,
-		// gamblerName: name,
-		//	 value: betValue,
-		//	 minute: minute,
-		// };
-		// <id, betMinute>
 		this.bets = [];
 		this.channelId = channelId;
 		this.startTimer(60000);
@@ -37,7 +43,7 @@ class BettingEntry {
 }
 
 /**
- * PERSONAL FUNCTION, REQUIRES SEPERATE CLIENT FOR USERS
+ * Singleton used to process betting system
  * This struct allows betting on player's death
  */
 const LeagueBetting = {
@@ -216,16 +222,17 @@ const LeagueBetting = {
 				}
 
 				// Calculate prize
-				let denominator = 0;
-				for (const winner of winners) {
-					denominator += winner.value;
-				}
+				// let denominator = 0;
+				// for (const winner of winners) {
+				// 	denominator += winner.value;
+				// }
 
 				// Give prize
 				message += '\n💰__**Winners:💰**__\t';
 				for (const winner of winners) {
-					const multiplier = winner.value / denominator;
-					const prize = Math.ceil(liveBet.jackpot * multiplier);
+					// const multiplier = winner.value / denominator;
+					// const prize = Math.ceil(liveBet.jackpot * multiplier);
+					const prize = winner.value;
 					const newCredits = this.gamblers.get(winner.gamblerId) + prize;
 					this.gamblers.set(winner.gamblerId, newCredits);
 					message += ` ** ${winner.gamblerName}** - ${prize},`;
