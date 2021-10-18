@@ -1,9 +1,9 @@
 const { GuildMember, Interaction } = require('discord.js');
 const express = require('express');
-const { toInteger } = require('lodash');
 const Azure = require('./Azure');
 const ClientExtended = require('./ClientExtended');
 const GuildDataManager = require('./GuildDataManager');
+const ordinalSuffixOf = require('./ordinalSuffixOf');
 
 
 class BettingEntry {
@@ -72,10 +72,10 @@ const LeagueBetting = {
 
 	/**
 	 *
-	 * @param {GuildMember} gambler
+	 * @param {string} gambler
 	 */
-	getGamblerCredits: function(gambler) {
-		const result = this.gamblers.get(gambler.id);
+	getGamblerCredits: function(gamblerId) {
+		const result = this.gamblers.get(gamblerId);
 		return result;
 	},
 
@@ -101,13 +101,15 @@ const LeagueBetting = {
 
 		for (const liveBet of this.liveBets) {
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
-				const betterCredits = this.gamblers.get(gambler.id);
+				const gamblerCredits = this.getGamblerCredits(gambler.id);
 
-				// Check credit account
-				if (betterCredits < betValue) {
+				// Check if gambler has enough credits
+				if (gamblerCredits < betValue) {
 					message = 'Not enough credits!';
 					return message;
 				}
+
+				// check if gambler already put a bet
 				for (const bet of liveBet.bets) {
 					if (bet.gamblerId == gambler.id) {
 						message = 'Already sent a bet!';
@@ -115,7 +117,7 @@ const LeagueBetting = {
 					}
 				}
 
-				this.gamblers.set(gambler.id, betterCredits - betValue);
+				this.gamblers.set(gambler.id, gamblerCredits - betValue);
 				liveBet.jackpot += betValue;
 
 				const bet = {
@@ -126,7 +128,7 @@ const LeagueBetting = {
 				};
 				liveBet.bets.push(bet);
 
-				message = `**${gambler.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}** minutes.`;
+				message = `**${gambler.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}${ordinalSuffixOf(minute)}** minute.`;
 
 
 			}
@@ -154,12 +156,6 @@ const LeagueBetting = {
 	 * @returns
 	 */
 	endBetting: function(targetSummoner, deathMinute) {
-		// const bet = {
-		//	 gamblerId: gambler.id,
-		//	 gamblerName: gambler.name,
-		//	 value: betValue,
-		//	 minute: minute,
-		// };
 		let message = 'No betting found!';
 		for (const liveBet of this.liveBets) {
 			// Find betting
@@ -172,17 +168,17 @@ const LeagueBetting = {
 				}
 
 				if (liveBet.bets.length < 2) {
-					message = `**${targetSummoner}** died in **${deathMinute}** minutes but not enough bets were sent!`;
-					// Return bets
+					message = `**${targetSummoner}** died in **${deathMinute}${ordinalSuffixOf(deathMinute)}** minute but not enough bets were sent!`;
+					// Return bet for single gambler
 					if (liveBet.bets.length == 1) {
 						const gambler = liveBet.bets[0];
-						const credits = this.gamblers.get(gambler.id) + gambler.betValue;
+						const credits = this.getGamblerCredits(gambler.id) + gambler.betValue;
 						this.gamblers.set(credits);
 						this.updateGamblers();
 					}
 					return message;
 				}
-				message = `**${targetSummoner}** died at **${deathMinute}** minute!`;
+				message = `**${targetSummoner}** died in **${deathMinute}${ordinalSuffixOf(deathMinute)}** minute!`;
 
 				// Find winners
 				let winners = [];
@@ -214,7 +210,7 @@ const LeagueBetting = {
 				message += '\n**Winners: **';
 				for (const winner of winners) {
 					const multiplier = winner.value / denominator;
-					const prize = liveBet.jackpot * multiplier;
+					const prize = Math.ceil(liveBet.jackpot * multiplier);
 					const newCredits = this.gamblers.get(winner.gamblerId) + prize;
 					this.gamblers.set(winner.gamblerId, newCredits);
 					message += ` **${winner.gamblerName}**, won: ${prize},`;

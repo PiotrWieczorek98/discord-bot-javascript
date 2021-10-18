@@ -18,7 +18,7 @@ module.exports = {
 
 		let message = null;
 		// Check if already registered
-		const gamblerCredits = LeagueBetting.getGamblerCredits(interaction.member);
+		const gamblerCredits = LeagueBetting.getGamblerCredits(interaction.member.id);
 		if (gamblerCredits == undefined) {
 			await LeagueBetting.addGambler(interaction.member, interaction.client);
 			message = `Successfuly registered **${interaction.member.displayName}** for League of Legends betting. You've got: **${LeagueBetting.initialCredits}** credits.`;
