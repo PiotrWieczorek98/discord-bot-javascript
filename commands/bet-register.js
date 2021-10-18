@@ -16,8 +16,18 @@ module.exports = {
 	 */
 	async execute(interaction) {
 
-		await LeagueBetting.addBetter(interaction.member, interaction.client);
-		const message = `Successfuly registered **${interaction.member.displayName}** for League of Legends betting. You've got: **${LeagueBetting.initialCredits}** credits.`;
+		let message = null;
+		// Check if already registered
+		const gamblerCredits = LeagueBetting.getGamblerCredits(interaction.member);
+		if (gamblerCredits == undefined) {
+			await LeagueBetting.addGambler(interaction.member, interaction.client);
+			message = `Successfuly registered **${interaction.member.displayName}** for League of Legends betting. You've got: **${LeagueBetting.initialCredits}** credits.`;
+
+		}
+		else {
+			message = `**${interaction.member.displayName}** is already registered! You've got: **${gamblerCredits}** credits.`;
+		}
+
 		await interaction.reply(message);
 		console.log(`Guild ${interaction.guild.id}: ${message}`);
 	},
