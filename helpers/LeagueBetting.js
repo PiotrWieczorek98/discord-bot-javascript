@@ -4,7 +4,8 @@ const Azure = require('./Azure');
 const ClientExtended = require('./ClientExtended');
 const GuildDataManager = require('./GuildDataManager');
 const ordinalSuffixOf = require('./ordinalSuffixOf');
-
+const { MessageEmbed } = require('discord.js');
+const wait = require('./wait');
 
 class BettingEntry {
 	/**
@@ -15,6 +16,7 @@ class BettingEntry {
 	constructor(summonerName, channelId) {
 		this.summonerName = summonerName;
 		this.isActive = true;
+		this.bettingAllowed = true;
 		this.jackpot = 0;
 		// const bet = {
 		//	 gamblerId: gambler.id,
@@ -25,6 +27,12 @@ class BettingEntry {
 		// <id, betMinute>
 		this.bets = [];
 		this.channelId = channelId;
+		this.startTimer(60000);
+	}
+
+	async startTimer(time) {
+		await wait(time);
+		this.bettingAllowed = false;
 	}
 }
 
@@ -97,7 +105,7 @@ const LeagueBetting = {
 	 * @param {number} minute
 	 */
 	addBetToJackpot: function(gambler, betValue, targetSummoner, minute) {
-		let message = null;
+		let message = 'Betting not found!';
 
 		for (const liveBet of this.liveBets) {
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
@@ -117,6 +125,13 @@ const LeagueBetting = {
 					}
 				}
 
+				// check if bets are accepted
+				if (!liveBet.bettingAllowed) {
+					message = 'Bets no longer accepted!';
+					return message;
+				}
+
+				// Send a bet
 				this.gamblers.set(gambler.id, gamblerCredits - betValue);
 				liveBet.jackpot += betValue;
 
@@ -128,7 +143,7 @@ const LeagueBetting = {
 				};
 				liveBet.bets.push(bet);
 
-				message = `**${gambler.displayName}** bets **${betValue}**, that **${targetSummoner}** will die in **${minute}${ordinalSuffixOf(minute)}** minute.`;
+				message = `**${gambler.displayName}** bets **${betValue}** credits, that **${targetSummoner}** will die in **${ordinalSuffixOf(minute)}** minute.`;
 
 
 			}
@@ -156,7 +171,7 @@ const LeagueBetting = {
 	 * @returns
 	 */
 	endBetting: function(targetSummoner, deathMinute) {
-		let message = 'No betting found!';
+		let message = 'Something went wrong in endBetting!';
 		for (const liveBet of this.liveBets) {
 			// Find betting
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
@@ -168,7 +183,7 @@ const LeagueBetting = {
 				}
 
 				if (liveBet.bets.length < 2) {
-					message = `**${targetSummoner}** died in **${deathMinute}${ordinalSuffixOf(deathMinute)}** minute but not enough bets were sent!`;
+					message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute but not enough bets were sent!`;
 					// Return bet for single gambler
 					if (liveBet.bets.length == 1) {
 						const gambler = liveBet.bets[0];
@@ -178,7 +193,7 @@ const LeagueBetting = {
 					}
 					return message;
 				}
-				message = `**${targetSummoner}** died in **${deathMinute}${ordinalSuffixOf(deathMinute)}** minute!`;
+				message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute!`;
 
 				// Find winners
 				let winners = [];
@@ -207,25 +222,23 @@ const LeagueBetting = {
 				}
 
 				// Give prize
-				message += '\n**Winners: **';
+				message += '\n💰__**Winners:💰**__\t';
 				for (const winner of winners) {
 					const multiplier = winner.value / denominator;
 					const prize = Math.ceil(liveBet.jackpot * multiplier);
 					const newCredits = this.gamblers.get(winner.gamblerId) + prize;
 					this.gamblers.set(winner.gamblerId, newCredits);
-					message += ` **${winner.gamblerName}**, won: ${prize},`;
+					message += ` ** ${winner.gamblerName}** - ${prize},`;
 				}
 
-				message += '**\nLosers: **';
+				message += '\n__**🐵Losers:🐵**__\t';
 				for (const loser of losers) {
-					message += ` **${loser.gamblerName}**, lost ${loser.value},`;
+					message += ` ** ${loser.gamblerName}** - ${loser.value},`;
 				}
 
 				this.updateGamblers();
-
+				break;
 			}
-
-			break;
 		}
 
 		return message;
@@ -245,7 +258,14 @@ const LeagueBetting = {
 			const data = req.body;
 			const summoner = data.SummonerName;
 			const channelId = data.ChannelId;
-			let message = null;
+
+			const bettingEmbed = new MessageEmbed()
+				.setColor('#0099ff')
+				.setTitle(`💸 Betting for ${summoner}'s death! 💸`)
+				.setDescription('Use /bet to enter the gamble!')
+				.setThumbnail('https://i.imgur.com/qpIocsj.png')
+				.setTimestamp()
+				.setFooter('Not worth it...', 'https://i.imgur.com/L8gH1y8.png');
 
 			// Avoid duplicate
 			let foundDuplicate = false;
@@ -257,40 +277,49 @@ const LeagueBetting = {
 
 			if (!foundDuplicate) {
 				this.startBetting(summoner, channelId);
-
-				message = `Started betting for: **${summoner}**`;
 				console.log('Received /game_started request for ', summoner);
+				// SEND CHANNEL MESSAGE
+				this.client.channels.cache.get(channelId).send({ embeds: [bettingEmbed] });
 			}
 			else {
-				message = `Duplicate betting for: **${summoner}**, Betting cancelled`;
 				console.log('Received duplicate /game_started request for ', summoner);
 			}
-
-
-			// SEND CHANNEL MESSAGE
-			this.client.channels.cache.get(channelId).send(message);
 
 			res.send({ status: 'ok' });
 
 		});
 
 		this.app.post('/death', (req, res) => {
+			let message = 'Something went wrong!';
 			const data = req.body;
 			const summoner = data.VictimName;
 
+			let foundBetting = false;
 			for (const entry of this.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
+					foundBetting = true;
 					const time = parseInt(data.EventTime);
 					const minute = Math.ceil(time / 60);
-					const message = this.endBetting(summoner, minute);
+					message = this.endBetting(summoner, minute);
 
 					// SEND CHANNEL MESSAGE
-					this.client.channels.cache.get(entry.channelId).send(message);
+					const bettingEmbed = new MessageEmbed()
+						.setColor('#0099ff')
+						.setTitle(`💸 ${summoner}  died! 💸`)
+						.setDescription(message)
+						.setThumbnail('https://i.imgur.com/qpIocsj.png')
+						.setTimestamp()
+						.setFooter('Not worth it...', 'https://i.imgur.com/L8gH1y8.png');
+					this.client.channels.cache.get(entry.channelId).send({ embeds: [bettingEmbed] });
 					break;
 				}
 			}
 
-			console.log('Received /death request for ', summoner);
+			if (!foundBetting) {
+				message = `Received false /death request for ${summoner}`;
+			}
+
+			console.log(message);
 			res.send({ status: 'ok' });
 
 		});

@@ -24,7 +24,7 @@ module.exports = {
 			// ---------------------------------------------------------
 			// Download Sounds from Azure
 			// ---------------------------------------------------------
-			console.log('\nGetting guilds\' sounds from container');
+			console.log('\nGetting guilds\' sounds from container...');
 			// Check directories
 			if (!fs.existsSync(client.paths.SOUNDS)) {
 				fs.mkdirSync(client.paths.SOUNDS);
@@ -33,7 +33,7 @@ module.exports = {
 			const containers = await Azure.listContainers();
 			for (const entry of client.guilds.cache) {
 				const guild = entry[1];
-				console.log(`Guild's ${guild.id} sounds: \n`);
+				console.log(`\nGuild's ${guild.id} sounds:`);
 
 				// Create one if didn't find
 				if (!containers.includes(guild.id)) {
@@ -57,7 +57,7 @@ module.exports = {
 			// ------------------------------------------------------------
 			// Download guilds' data
 			// -------------------------------------------------------------
-			console.log('\nGetting guilds\' data from container');
+			console.log('\nGetting guilds\' data from container...');
 			// Check directory
 			if (!fs.existsSync(client.paths.DATA)) {
 				fs.mkdirSync(client.paths.DATA);
@@ -98,19 +98,19 @@ module.exports = {
 			LeagueBetting.constructor(client, 100);
 			LeagueBetting.setListener(3000);
 
-			fileName = client.vars.FILE_BETTERS;
+			fileName = client.vars.FILE_GAMBLERS;
 			filePath = `${client.paths.DATA}/${fileName}`;
-			let betters = null;
+			let gamblers = null;
 			if (files.includes(fileName)) {
-				betters = await GuildDataManager.readMapFromFile(filePath);
-				betters.forEach((value) => {
-					LeagueBetting.betters.set(value[0], value[1]);
+				gamblers = await GuildDataManager.readMapFromFile(filePath);
+				gamblers.forEach((value) => {
+					LeagueBetting.gamblers.set(value[0], value[1]);
 				});
 			}
 			else {
 				// Prepare empty data and upload
-				betters = new Map();
-				await GuildDataManager.writeMapToFile(betters, filePath);
+				gamblers = new Map();
+				await GuildDataManager.writeMapToFile(gamblers, filePath);
 				await Azure.uploadBlob(client.vars.CONTAINER_DATA, filePath);
 			}
 
