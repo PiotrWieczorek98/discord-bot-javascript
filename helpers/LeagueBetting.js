@@ -54,8 +54,8 @@ const LeagueBetting = {
 	// [BettingEntry]
 	liveBets: [],
 	initialCredits: null,
-	fileName: null,
-	filePath: null,
+	fileGamblersPath: null,
+	fileHistoryPath: null,
 	container: null,
 	client: null,
 
@@ -66,8 +66,8 @@ const LeagueBetting = {
 	 */
 	constructor: function(client, credits) {
 		this.app.use(express.json());
-		this.fileName = client.vars.FILE_BETTERS;
-		this.filePath = `${client.paths.DATA}/${this.fileName}`;
+		this.fileGamblersPath = `${client.paths.DATA}/${client.vars.FILE_GAMBLERS}`;
+		this.fileHistoryPath = `${client.paths.DATA}/${client.vars.FILE_BETS}`;
 		this.container = client.vars.CONTAINER_DATA;
 		this.initialCredits = credits;
 		this.client = client;
@@ -80,8 +80,8 @@ const LeagueBetting = {
 	addGambler: async function(gambler) {
 		this.gamblers.set(gambler.id, this.initialCredits);
 
-		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.filePath);
-		await Azure.uploadBlob(this.container, this.filePath, null, true);
+		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.fileGamblersPath);
+		await Azure.uploadBlob(this.container, this.fileGamblersPath, true);
 	},
 
 	/**
@@ -98,8 +98,8 @@ const LeagueBetting = {
 	 * @param {{}} gamblers
 	 */
 	updateGamblers: async function() {
-		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.filePath);
-		await Azure.uploadBlob(this.container, this.filePath, null, true);
+		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.fileGamblersPath);
+		await Azure.uploadBlob(this.container, this.fileGamblersPath, true);
 		console.log('Betters list updated.');
 	},
 
@@ -117,6 +117,11 @@ const LeagueBetting = {
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
 				const gamblerCredits = this.getGamblerCredits(gambler.id);
 
+				// Check if gambler is registered
+				if (gamblerCredits == undefined) {
+					message = 'Not yet registered!';
+					return message;
+				}
 				// Check if gambler has enough credits
 				if (gamblerCredits < betValue) {
 					message = 'Not enough credits!';
@@ -254,19 +259,18 @@ const LeagueBetting = {
 
 	logBetting: function(liveBet) {
 		const fs = require('fs');
-		const filePath = `${this.client.paths.DATA}/${this.client.vars.FILE_BETS}`;
 		let row = `${liveBet.summonerName};`;
 		for (const entry of liveBet.bets) {
 			row += `${entry.gamblerName};${entry.value};${entry.minute};`;
 		}
 		row += '\n';
 
-		fs.appendFile(filePath, row, function(err) {
+		fs.appendFile(this.fileHistoryPath, row, function(err) {
 			if (err) throw err;
 			console.log('Saved log: ', row);
 		});
 
-		Azure.uploadBlob(this.container, filePath, null, true);
+		Azure.uploadBlob(this.container, this.fileHistoryPath, true);
 	},
 
 	// ------------------------------------------------------------------------------------

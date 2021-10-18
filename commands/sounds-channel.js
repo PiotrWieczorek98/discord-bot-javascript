@@ -41,7 +41,7 @@ module.exports = {
 			interaction.reply({ content: message, ephermal: true });
 			console.log(`Guild ${interaction.guild.id}: ${message}`);
 		}
-		await Azure.uploadBlob(interaction.client.vars.CONTAINER_DATA, filePath, undefined, true);
+		await Azure.uploadBlob(interaction.client.vars.CONTAINER_DATA, filePath, true);
 
 		message = '✅ Channel set!';
 		interaction.reply({ content: message, ephermal: true });

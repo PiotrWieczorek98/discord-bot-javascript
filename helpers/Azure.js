@@ -16,17 +16,60 @@ class Azure {
 	 * @param {boolean} overwrite
 	 * @param {String} uploadAs change blob name
 	 */
-	static async uploadBlob(containerName, filePath, uploadAs = null, overwrite = false) {
+	static async uploadBlobAs(containerName, filePath, uploadAs, overwrite = false) {
+		const fileName = path.parse(filePath).base;
+		try {
+			// Check if file exists
+			if (!fs.existsSync(filePath)) {
+				console.log(`File ${filePath} does not exist!`);
+				return new Promise((resolve) => {
+					resolve('❌');
+				});
+			}
 
-		// Check name option
-		let fileName = null;
-		if (uploadAs == null) {
-			fileName = path.parse(filePath).base;
-		}
-		else {
-			fileName = uploadAs;
-		}
+			console.log(`Uploading blob ${fileName} as  ${uploadAs}`);
+			// Create the BlobServiceClient object which will be used to create a container client
+			const blobServiceClient = BlobServiceClient.fromConnectionString(envs.AZURE_STORAGE_CONNECTION_STRING);
+			const containerClient = blobServiceClient.getContainerClient(containerName);
 
+			// Prevent overwrite
+			if (!overwrite) {
+				for await (const blob of containerClient.listBlobsFlat()) {
+					if (blob.name == uploadAs) {
+						console.log('File already exists in azure!');
+						return new Promise((resolve) => {
+							resolve('⚠️');
+						});
+					}
+				}
+			}
+
+			// Create a blob client using the local file name as the name for the blob
+			const blockBlobClient = containerClient.getBlockBlobClient(uploadAs);
+
+			// Upload the created file
+			await blockBlobClient.uploadFile(filePath);
+			return new Promise((resolve) => {
+				resolve('👍');
+			});
+		}
+		catch (error) {
+			console.log('Failed uploading to azure!');
+			return new Promise((reject) => {
+				reject('❌');
+			});
+		}
+	}
+
+	/**
+	 * Upload files to azure storage
+	 * @param {String} containerName
+	 * @param {String} path
+	 * @param {String} fileName
+	 * @param {boolean} overwrite
+	 */
+	static async uploadBlob(containerName, filePath, overwrite = false) {
+		const fileName = path.parse(filePath).base;
 		try {
 			// Check if file exists
 			if (!fs.existsSync(filePath)) {
@@ -44,7 +87,7 @@ class Azure {
 			// Prevent overwrite
 			if (!overwrite) {
 				for await (const blob of containerClient.listBlobsFlat()) {
-					if (blob.name == fileName) {
+					if (blob.name == uploadAs) {
 						console.log('File already exists in azure!');
 						return new Promise((resolve) => {
 							resolve('⚠️');
