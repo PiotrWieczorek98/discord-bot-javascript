@@ -39,6 +39,12 @@ class BettingEntry {
 	async startTimer(time) {
 		await wait(time);
 		this.bettingAllowed = false;
+		if (this.bets.length < 2) {
+			LeagueBetting.cancelBetting(this);
+			const message = `Betting for **${this.summonerNametargetSummoner}**canceled - not enough bets were sent!`;
+			LeagueBetting.client.channels.cache.get(this.channelId).send(message);
+
+		}
 	}
 }
 
@@ -159,6 +165,20 @@ const LeagueBetting = {
 	},
 
 	/**
+	 * Return bet for single gambler
+	 * @param {BettingEntry} liveBet
+	 */
+	cancelBetting: function(liveBet) {
+		liveBet.isActive = false;
+		if (liveBet.bets.length == 1) {
+			const gambler = liveBet.bets[0];
+			const credits = this.getGamblerCredits(gambler.id) + gambler.betValue;
+			this.gamblers.set(credits);
+			this.uploadGamblersToAzure();
+		}
+	},
+
+	/**
      * @todo Odpalenie betowania
      * @param {string} summonerName
      * @param {string} channelId
@@ -177,43 +197,29 @@ const LeagueBetting = {
 	 * @returns
 	 */
 	endBetting: function(targetSummoner, deathMinute) {
-		let message = 'Something went wrong in endBetting!';
+		let message = null;
 		for (const liveBet of this.liveBets) {
 			// Find betting
 			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
 				liveBet.isActive = false;
 
-				if (deathMinute == 0) {
+				if (deathMinute == -1) {
 					message = `Pog, ${targetSummoner} didn't die! Everyone lost!`;
 					return message;
 				}
 
 				if (liveBet.bets.length < 2) {
 					message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute but not enough bets were sent!`;
-					// Return bet for single gambler
-					if (liveBet.bets.length == 1) {
-						const gambler = liveBet.bets[0];
-						const credits = this.getGamblerCredits(gambler.id) + gambler.betValue;
-						this.gamblers.set(credits);
-						this.uploadGamblersToAzure();
-					}
-					return message;
+					this.cancelBetting(liveBet);
 				}
 				message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute!`;
 
 				// Find winners
-				let winners = [];
+				const winners = [];
 				const losers = [];
+				const winLimit = 3;
 				for (const entry of liveBet.bets) {
-					if (winners[0] == null || Math.abs(entry.minute - deathMinute) < Math.abs(winners[0].minute - deathMinute)) {
-
-						for (const nowLoser of winners) {
-							losers.push(nowLoser);
-						}
-						winners = [];
-						winners.push(entry);
-					}
-					else if (Math.abs(entry.minute - deathMinute) == Math.abs(winners[0].minute - deathMinute)) {
+					if (Math.abs(entry.minute - deathMinute) <= winLimit) {
 						winners.push(entry);
 					}
 					else {
@@ -221,18 +227,11 @@ const LeagueBetting = {
 					}
 				}
 
-				// Calculate prize
-				// let denominator = 0;
-				// for (const winner of winners) {
-				// 	denominator += winner.value;
-				// }
-
 				// Give prize
 				message += '\n💰__**Winners:💰**__\t';
 				for (const winner of winners) {
-					// const multiplier = winner.value / denominator;
-					// const prize = Math.ceil(liveBet.jackpot * multiplier);
-					const prize = winner.value;
+					const multiplier = -Math.abs(winner.minute - deathMinute) + winLimit + 1.1;
+					const prize = Math.floor(winner.value * multiplier);
 					const newCredits = this.gamblers.get(winner.gamblerId) + prize;
 					this.gamblers.set(winner.gamblerId, newCredits);
 					message += ` ** ${winner.gamblerName}** - ${prize},`;
@@ -240,6 +239,10 @@ const LeagueBetting = {
 
 				message += '\n__**🐵Losers:🐵**__\t';
 				for (const loser of losers) {
+					const multiplier = 1 / (Math.abs(loser.minute - deathMinute) - winLimit + 1);
+					const prize = Math.floor(loser.value * multiplier);
+					const newCredits = this.gamblers.get(loser.gamblerId) + prize;
+					this.gamblers.set(loser.gamblerId, newCredits);
 					message += ` ** ${loser.gamblerName}** - ${loser.value},`;
 				}
 
@@ -249,6 +252,9 @@ const LeagueBetting = {
 			}
 		}
 
+		if (message == null) {
+			message = 'Something went wrong in endBetting!';
+		}
 		return message;
 	},
 

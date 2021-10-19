@@ -97,7 +97,7 @@ const Endpoints = {
 
 			for (const entry of LeagueBetting.liveBets) {
 				if (entry.summonerName == summoner && entry.isActive) {
-					const message = LeagueBetting.endBetting(summoner, 0);
+					const message = LeagueBetting.endBetting(summoner, -1);
 
 					// SEND CHANNEL MESSAGE
 					this.client.channels.cache.get(entry.channelId).send(message);
