@@ -1,7 +1,6 @@
 const { envs } = require('./helpers/env-vars.js');
 const fs = require('fs');
-const ClientExtended = require('./helpers/ClientExtended.js');
-const LeagueBetting = require('./helpers/LeagueBetting.js');
+const ClientExtended = require('./classes/ClientExtended.js');
 
 // -------------------------------------------------------------
 // Initialization

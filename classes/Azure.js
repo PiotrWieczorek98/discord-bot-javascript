@@ -1,5 +1,5 @@
 const { BlobServiceClient } = require('@azure/storage-blob');
-const { envs } = require('./env-vars.js');
+const { envs } = require('../helpers/env-vars');
 const fs = require('fs');
 const path = require('path');
 

@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 const { Message } = require('discord.js');
-const GuildDataManager = require('../helpers/GuildDataManager');
-const Azure = require('../helpers/Azure');
+const GuildDataManager = require('../classes/GuildDataManager');
+const Azure = require('../classes/Azure');
 
 // --------------------------------------------------------------------
 // When message is sent

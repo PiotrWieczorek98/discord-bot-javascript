@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
-const Azure = require('../helpers/Azure.js');
+const Azure = require('../classes/Azure.js');
 
 // --------------------------------------------------------------------
 // Delete sound from sound list and Azure

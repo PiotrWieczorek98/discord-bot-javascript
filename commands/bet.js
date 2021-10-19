@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
-const LeagueBetting = require('../helpers/LeagueBetting');
+const LeagueBetting = require('../classes/LeagueBetting');
 
 // --------------------------------------------------------------------
 // Bet some cash

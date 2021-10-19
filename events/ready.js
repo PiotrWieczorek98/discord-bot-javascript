@@ -1,10 +1,11 @@
 // eslint-disable-next-line no-unused-vars
-const ClientExtended = require('../helpers/ClientExtended.js');
-const GuildSoundList = require('../helpers/GuildSoundList.js');
+const ClientExtended = require('../classes/ClientExtended.js');
+const GuildSoundList = require('../classes/GuildSoundList.js');
 const fs = require('fs');
-const Azure = require('../helpers/Azure');
-const GuildDataManager = require('../helpers/GuildDataManager');
-const LeagueBetting = require('../helpers/LeagueBetting.js');
+const Azure = require('../classes/Azure');
+const GuildDataManager = require('../classes/GuildDataManager');
+const LeagueBetting = require('../classes/LeagueBetting.js');
+const Endpoints = require('../classes/Endpoints.js');
 
 // --------------------------------------------------------------------
 // Run once bot is ready
@@ -96,7 +97,8 @@ module.exports = {
 			// DELETE THIS IF YOU FORKED THIS REPO
 			// Load League betting data
 			LeagueBetting.constructor(client, 100);
-			LeagueBetting.setListener(3000);
+			Endpoints.constructor(client);
+			Endpoints.setListener(3000);
 
 			fileName = client.vars.FILE_GAMBLERS;
 			filePath = `${client.paths.DATA}/${fileName}`;

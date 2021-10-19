@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const GuildPlayer = require('../helpers/GuildPlayer.js');
-const { AudioSourceLocal } = require('../helpers/AudioSource.js');
-const GuildQueue = require('../helpers/GuildQueue.js');
+const GuildPlayer = require('../classes/GuildPlayer.js');
+const { AudioSourceLocal } = require('../classes/AudioSource.js');
+const GuildQueue = require('../classes/GuildQueue.js');
 // eslint-disable-next-line no-unused-vars
 const { Interaction, GuildMember } = require('discord.js');
 

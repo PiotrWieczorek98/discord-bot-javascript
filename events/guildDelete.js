@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 const { Guild } = require('discord.js');
-const Azure = require('../helpers/Azure');
-const DataManager = require('../helpers/GuildDataManager');
+const Azure = require('../classes/Azure');
+const DataManager = require('../classes/GuildDataManager');
 
 // --------------------------------------------------------------------
 // When bot leaves guild

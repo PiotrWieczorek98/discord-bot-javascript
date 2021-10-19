@@ -1,11 +1,11 @@
+// eslint-disable-next-line no-unused-vars
 const { GuildMember, Interaction } = require('discord.js');
-const express = require('express');
-const Azure = require('./Azure');
+// eslint-disable-next-line no-unused-vars
 const ClientExtended = require('./ClientExtended');
+const Azure = require('./Azure');
 const GuildDataManager = require('./GuildDataManager');
-const ordinalSuffixOf = require('./ordinalSuffixOf');
-const { MessageEmbed } = require('discord.js');
-const wait = require('./wait');
+const ordinalSuffixOf = require('../helpers/ordinalSuffixOf');
+const wait = require('../helpers/wait');
 
 // ------------------------------------------------------------------------------------
 // PERSONAL FUNCTIONALITY, REQUIRES SEPERATE CLIENT FOR USERS
@@ -47,8 +47,6 @@ class BettingEntry {
  * This struct allows betting on player's death
  */
 const LeagueBetting = {
-
-	app: express(),
 	// <id, credits>
 	gamblers: new Map(),
 	// [BettingEntry]
@@ -65,12 +63,10 @@ const LeagueBetting = {
 	 * @param {number} credits
 	 */
 	constructor: function(client, credits) {
-		this.app.use(express.json());
 		this.fileGamblersPath = `${client.paths.DATA}/${client.vars.FILE_GAMBLERS}`;
 		this.fileHistoryPath = `${client.paths.DATA}/${client.vars.FILE_BETS}`;
 		this.container = client.vars.CONTAINER_DATA;
 		this.initialCredits = credits;
-		this.client = client;
 	},
 
 	/**
@@ -95,9 +91,8 @@ const LeagueBetting = {
 
 	/**
 	 * Update betting data
-	 * @param {{}} gamblers
 	 */
-	updateGamblers: async function() {
+	uploadGamblersToAzure: async function() {
 		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.fileGamblersPath);
 		await Azure.uploadBlob(this.container, this.fileGamblersPath, true);
 		console.log('Betters list updated.');
@@ -200,7 +195,7 @@ const LeagueBetting = {
 						const gambler = liveBet.bets[0];
 						const credits = this.getGamblerCredits(gambler.id) + gambler.betValue;
 						this.gamblers.set(credits);
-						this.updateGamblers();
+						this.uploadGamblersToAzure();
 					}
 					return message;
 				}
@@ -248,7 +243,7 @@ const LeagueBetting = {
 					message += ` ** ${loser.gamblerName}** - ${loser.value},`;
 				}
 
-				this.updateGamblers(liveBet);
+				this.uploadGamblersToAzure(liveBet);
 				this.logBetting(liveBet);
 				break;
 			}
@@ -271,114 +266,6 @@ const LeagueBetting = {
 		});
 
 		Azure.uploadBlob(this.container, this.fileHistoryPath, true);
-	},
-
-	// ------------------------------------------------------------------------------------
-	// ENDPOINTS
-	// ------------------------------------------------------------------------------------
-
-	/**
-     *
-     * @param {number} port
-     */
-	setListener: async function(port) {
-
-		this.app.post('/game_started', (req, res) => {
-			const data = req.body;
-			const summoner = data.SummonerName;
-			const channelId = data.ChannelId;
-
-			const bettingEmbed = new MessageEmbed()
-				.setColor('#0099ff')
-				.setTitle(`💸 Betting for ${summoner}'s death! 💸`)
-				.setDescription('Use /bet to enter the gamble!')
-				.setThumbnail('https://i.imgur.com/qpIocsj.png')
-				.setTimestamp()
-				.setFooter('Not worth it...', 'https://i.imgur.com/L8gH1y8.png');
-
-			// Avoid duplicate
-			let foundDuplicate = false;
-			for (const entry of this.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
-					foundDuplicate = true;
-				}
-			}
-
-			if (!foundDuplicate) {
-				this.startBetting(summoner, channelId);
-				console.log('Received /game_started request for ', summoner);
-				// SEND CHANNEL MESSAGE
-				this.client.channels.cache.get(channelId).send({ embeds: [bettingEmbed] });
-			}
-			else {
-				console.log('Received duplicate /game_started request for ', summoner);
-			}
-
-			res.send({ status: 'ok' });
-
-		});
-
-		this.app.post('/death', (req, res) => {
-			let message = 'Something went wrong!';
-			const data = req.body;
-			const summoner = data.VictimName;
-
-			let foundBetting = false;
-			for (const entry of this.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
-					foundBetting = true;
-					const time = parseInt(data.EventTime);
-					const minute = Math.ceil(time / 60);
-					message = this.endBetting(summoner, minute);
-
-					// SEND CHANNEL MESSAGE
-					const bettingEmbed = new MessageEmbed()
-						.setColor('#0099ff')
-						.setTitle(`💸 ${summoner}  died! 💸`)
-						.setDescription(message)
-						.setThumbnail('https://i.imgur.com/qpIocsj.png')
-						.setTimestamp()
-						.setFooter('Not worth it...', 'https://i.imgur.com/L8gH1y8.png');
-					this.client.channels.cache.get(entry.channelId).send({ embeds: [bettingEmbed] });
-					break;
-				}
-			}
-
-			if (!foundBetting) {
-				message = `Received false /death request for ${summoner}`;
-			}
-
-			console.log(message);
-			res.send({ status: 'ok' });
-
-		});
-
-		this.app.post('/game_ended', (req, res) => {
-			const data = req.body;
-			const summoner = data.VictimName;
-
-			for (const entry of this.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
-					const message = this.endBetting(summoner, 0);
-
-					// SEND CHANNEL MESSAGE
-					this.client.channels.cache.get(entry.channelId).send(message);
-				}
-			}
-
-			console.log('Received /death request for ', summoner);
-			res.send({ status: 'ok' });
-		});
-
-		this.app.post('/ping', (req, res) => {
-			const data = req.body;
-
-			console.log('Received /ping request for ', data);
-			res.send(data);
-		});
-
-		const listeningPort = process.env.PORT || port;
-		this.app.listen(listeningPort, () => console.log('Listening on port: ', listeningPort));
 	},
 
 };

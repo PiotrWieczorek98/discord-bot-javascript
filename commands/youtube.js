@@ -2,9 +2,9 @@ const { Util } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const search = require('youtube-search');
 const { envs } = require('../helpers/env-vars.js');
-const GuildPlayer = require('../helpers/GuildPlayer.js');
-const GuildQueue = require('../helpers/GuildQueue.js');
-const { AudioSourceYoutube } = require('../helpers/AudioSource.js');
+const GuildPlayer = require('../classes/GuildPlayer.js');
+const GuildQueue = require('../classes/GuildQueue.js');
+const { AudioSourceYoutube } = require('../classes/AudioSource.js');
 // eslint-disable-next-line no-unused-vars
 const { Interaction } = require('discord.js');
 
