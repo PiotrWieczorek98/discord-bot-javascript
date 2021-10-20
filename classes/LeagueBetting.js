@@ -151,11 +151,11 @@ const LeagueBetting = {
 					gamblerId: gambler.id,
 					gamblerName: gambler.displayName,
 					value: betValue,
-					minute: minute,
+					minute: minute.toFixed(2),
 				};
 				liveBet.bets.push(bet);
 
-				message = `**${gambler.displayName}** bets **${betValue}** credits, that **${targetSummoner}** will die in **${ordinalSuffixOf(minute)}** minute.`;
+				message = `**${gambler.displayName}** bets **${betValue}** credits, that **${targetSummoner}** will die in **${ordinalSuffixOf(bet.minute)}** minute.`;
 
 
 			}
@@ -215,39 +215,24 @@ const LeagueBetting = {
 				message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute!`;
 
 				// Find winners
-				const winners = [];
-				const losers = [];
-				const winLimit = 3;
+				let winners = '\n💰__**Winners:💰**__\t';
+				let losers = '\n__**🐵Losers:🐵**__\t';
+
 				for (const entry of liveBet.bets) {
-					if (Math.abs(entry.minute - deathMinute) <= winLimit) {
-						winners.push(entry);
+					const multiplier = -(2 * Math.log(Math.abs(entry.minute - deathMinute)) + 1.5);
+					const prize = Math.floor(entry.value * multiplier);
+					const newCredits = this.gamblers.get(entry.gamblerId) + prize;
+					this.gamblers.set(entry.gamblerId, newCredits);
+					if (multiplier > 1) {
+						winners += ` ** ${entry.gamblerName}** - ${prize}cr,`;
 					}
 					else {
-						losers.push(entry);
+						losers += ` ** ${entry.gamblerName}** - ${prize}cr,`;
 					}
 				}
-
-				// Give prize
-				message += '\n💰__**Winners:💰**__\t';
-				for (const winner of winners) {
-					const multiplier = -Math.abs(winner.minute - deathMinute) + winLimit + 1.1;
-					const prize = Math.floor(winner.value * multiplier);
-					const newCredits = this.gamblers.get(winner.gamblerId) + prize;
-					this.gamblers.set(winner.gamblerId, newCredits);
-					message += ` ** ${winner.gamblerName}** - ${prize},`;
-				}
-
-				message += '\n__**🐵Losers:🐵**__\t';
-				for (const loser of losers) {
-					const multiplier = 1 / (Math.abs(loser.minute - deathMinute) - winLimit + 1);
-					const prize = Math.floor(loser.value * multiplier);
-					const newCredits = this.gamblers.get(loser.gamblerId) + prize;
-					this.gamblers.set(loser.gamblerId, newCredits);
-					message += ` ** ${loser.gamblerName}** - ${loser.value},`;
-				}
-
 				this.uploadGamblersToAzure(liveBet);
 				this.logBetting(liveBet);
+				message = winners + losers;
 				break;
 			}
 		}

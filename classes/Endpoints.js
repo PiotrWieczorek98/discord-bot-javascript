@@ -66,7 +66,7 @@ const Endpoints = {
 				if (entry.summonerName == summoner && entry.isActive) {
 					foundBetting = true;
 					const time = parseInt(data.EventTime);
-					const minute = Math.ceil(time / 60);
+					const minute = (time / 60).toFixed(2);
 					message = LeagueBetting.endBetting(summoner, minute);
 
 					// SEND CHANNEL MESSAGE

@@ -19,7 +19,7 @@ module.exports = {
 			.setName('summoner')
 			.setDescription('Summoner name of the target')
 			.setRequired(true))
-		.addIntegerOption(option => option
+		.addNumberOption(option => option
 			.setName('minute')
 			.setDescription('Minute of the game in which the target will die')
 			.setRequired(true)),
@@ -30,7 +30,7 @@ module.exports = {
 
 		const bet = interaction.options.getInteger('value');
 		const summoner = interaction.options.getString('summoner');
-		const minute = interaction.options.getInteger('minute');
+		const minute = interaction.options.getNumber('minute');
 		const message = LeagueBetting.addBetToJackpot(interaction.member, bet, summoner, minute);
 		await interaction.reply(message);
 		console.log(`Guild ${interaction.guild.id}: ${message}`);
