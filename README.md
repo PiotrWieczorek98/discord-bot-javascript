@@ -1,5 +1,5 @@
 # Introducing BOI THE BOT JavaScript edition
-## Now with less garbage more JavaScript!
+## Now with less garbage code! 🙍🏿‍♂️🔫👮🏻‍♂️
 
 ![Alt Text](https://c.tenor.com/u_uk_vEg_QIAAAAd/cute-dog.gif)
 
