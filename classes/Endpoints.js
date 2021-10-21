@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const LeagueBetting = require('./LeagueBetting');
 const express = require('express');
+const http = require('http');
 
 const Endpoints = {
 
@@ -117,6 +118,35 @@ const Endpoints = {
 
 		const listeningPort = process.env.PORT || port;
 		this.app.listen(listeningPort, () => console.log('Listening on port: ', listeningPort));
+
+		this.keepAlive(listeningPort);
+	},
+
+	/**
+	 * ping every 20 minutes to keep alive on heroku
+	 * @param {number} port
+	 */
+	keepAlive: async function(port) {
+		setInterval(function() {
+			const options = {
+				host: ' discord-js-boi-bot.herokuapp.com',
+				port: port,
+				path: '/ping',
+			};
+			http.get(options, function(res) {
+				res.on('data', function(chunk) {
+					try {
+						// optional logging... disable after it's working
+						console.log('HEROKU RESPONSE: ' + chunk);
+					}
+					catch (err) {
+						console.log(err.message);
+					}
+				});
+			}).on('error', function(err) {
+				console.log('Error: ' + err.message);
+			});
+		}, 20 * 60 * 1000);
 	},
 
 };
