@@ -57,6 +57,15 @@ class ClientExtended extends Client {
 			FILE_GAMBLERS: 'gamblers.json',
 			FILE_BETS: 'bets.csv',
 		};
+
+		// For gambling
+		this.gambleConfig = {
+			initialCredits: 100,
+			port: 3000,
+			timeLimit: 6000,
+			fileGamblersPath: `${this.paths.DATA}/${this.vars.FILE_GAMBLERS}`,
+			fileHistoryPath: `${this.paths.DATA}/${this.vars.FILE_BETS}`,
+		};
 	}
 }
 

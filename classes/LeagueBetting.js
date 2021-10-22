@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-const { GuildMember, Interaction } = require('discord.js');
+const { GuildMember } = require('discord.js');
 // eslint-disable-next-line no-unused-vars
 const ClientExtended = require('./ClientExtended');
 const Azure = require('./Azure');
@@ -26,16 +26,20 @@ class BettingEntry {
 	 * @param {string} summonerName
 	 * @param {string} channelId
 	 */
-	constructor(summonerName, channelId) {
+	constructor(summonerName, channelId, timeLimit) {
 		this.summonerName = summonerName;
 		this.isActive = true;
 		this.bettingAllowed = true;
 		this.jackpot = 0;
 		this.bets = [];
 		this.channelId = channelId;
-		this.startTimer(60000);
+		this.startTimer(timeLimit);
 	}
 
+	/**
+	 * Allow betting for a limited time
+	 * @param {number} time
+	 */
 	async startTimer(time) {
 		await wait(time);
 		this.bettingAllowed = false;
@@ -57,9 +61,6 @@ const LeagueBetting = {
 	gamblers: new Map(),
 	// [BettingEntry]
 	liveBets: [],
-	initialCredits: null,
-	fileGamblersPath: null,
-	fileHistoryPath: null,
 	container: null,
 	client: null,
 
@@ -68,11 +69,8 @@ const LeagueBetting = {
 	 * @param {ClientExtended} client
 	 * @param {number} credits
 	 */
-	constructor: function(client, credits) {
-		this.fileGamblersPath = `${client.paths.DATA}/${client.vars.FILE_GAMBLERS}`;
-		this.fileHistoryPath = `${client.paths.DATA}/${client.vars.FILE_BETS}`;
-		this.container = client.vars.CONTAINER_DATA;
-		this.initialCredits = credits;
+	constructor: function(client) {
+		this.client = client;
 	},
 
 	/**
@@ -82,8 +80,8 @@ const LeagueBetting = {
 	addGambler: async function(gambler) {
 		this.gamblers.set(gambler.id, this.initialCredits);
 
-		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.fileGamblersPath);
-		await Azure.uploadBlob(this.container, this.fileGamblersPath, true);
+		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.client.gambleConfig.fileGamblersPath);
+		await Azure.uploadBlob(this.client.vars.CONTAINER_DATA, this.client.gambleConfig.fileGamblersPath, true);
 	},
 
 	/**
@@ -99,8 +97,8 @@ const LeagueBetting = {
 	 * Update betting data
 	 */
 	uploadGamblersToAzure: async function() {
-		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.fileGamblersPath);
-		await Azure.uploadBlob(this.container, this.fileGamblersPath, true);
+		await GuildDataManager.writeMapToFile(LeagueBetting.gamblers, this.client.gambleConfig.fileGamblersPath);
+		await Azure.uploadBlob(this.client.vars.CONTAINER_DATA, this.client.gambleConfig.fileGamblersPath, true);
 		console.log('Betters list updated.');
 	},
 
@@ -179,14 +177,14 @@ const LeagueBetting = {
 	},
 
 	/**
-     * @todo Odpalenie betowania
+     * @todo Start new betting event
      * @param {string} summonerName
      * @param {string} channelId
      */
 	startBetting: async function(summonerName, channelId) {
 		console.log('Started Betting for: ', summonerName);
 
-		const newBetting = new BettingEntry(summonerName, channelId);
+		const newBetting = new BettingEntry(summonerName, channelId, this.client.gambleConfig.timeLimit);
 		this.liveBets.push(newBetting);
 	},
 
@@ -251,12 +249,12 @@ const LeagueBetting = {
 		}
 		row += '\n';
 
-		fs.appendFile(this.fileHistoryPath, row, function(err) {
+		fs.appendFile(this.client.gambleConfig.fileHistoryPath, row, function(err) {
 			if (err) throw err;
 			console.log('Saved log: ', row);
 		});
 
-		Azure.uploadBlob(this.container, this.fileHistoryPath, true);
+		Azure.uploadBlob(this.client.vars.CONTAINER_DATA, this.client.gambleConfig.fileHistoryPath, true);
 	},
 
 };

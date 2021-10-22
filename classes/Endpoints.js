@@ -2,6 +2,7 @@ const { MessageEmbed } = require('discord.js');
 const LeagueBetting = require('./LeagueBetting');
 const express = require('express');
 const http = require('http');
+const ClientExtended = require('./ClientExtended');
 
 const Endpoints = {
 
@@ -12,9 +13,14 @@ const Endpoints = {
 	app: express(),
 	client: null,
 
+	/**
+	 * Initialize gambling system
+	 * @param {ClientExtended} client
+	 */
 	constructor: function(client) {
 		this.app.use(express.json());
 		this.client = client;
+		Endpoints.setListener(client.gambleConfig.port);
 	},
 	/**
      * React to web requests
@@ -117,38 +123,14 @@ const Endpoints = {
 		});
 
 		const listeningPort = process.env.PORT || port;
-		this.app.listen(listeningPort, () => console.log('Listening on port: ', listeningPort));
+		this.app.listen(listeningPort, () => {
+			const wakeUpDyno = require('../helpers/wakeUpDyno');
+			const DYNO_URL = 'https://discord-js-boi-bot.herokuapp.com/ping';
 
-		this.keepAlive(listeningPort);
+			wakeUpDyno(DYNO_URL);
+			console.log('Listening on port: ', listeningPort);
+		});
 	},
-
-	/**
-	 * ping every 20 minutes to keep alive on heroku
-	 * @param {number} port
-	 */
-	keepAlive: async function(port) {
-		setInterval(function() {
-			const options = {
-				host: ' discord-js-boi-bot.herokuapp.com',
-				port: port,
-				path: '/ping',
-			};
-			http.get(options, function(res) {
-				res.on('data', function(chunk) {
-					try {
-						// optional logging... disable after it's working
-						console.log('HEROKU RESPONSE: ' + chunk);
-					}
-					catch (err) {
-						console.log(err.message);
-					}
-				});
-			}).on('error', function(err) {
-				console.log('Error: ' + err.message);
-			});
-		}, 20 * 60 * 1000);
-	},
-
 };
 
 module.exports = Endpoints;

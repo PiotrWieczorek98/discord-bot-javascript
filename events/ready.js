@@ -10,8 +10,6 @@ const Endpoints = require('../classes/Endpoints.js');
 // --------------------------------------------------------------------
 // Run once bot is ready
 // --------------------------------------------------------------------
-
-
 module.exports = {
 	name: 'ready',
 	once: true,
@@ -96,9 +94,8 @@ module.exports = {
 
 			// DELETE THIS IF YOU FORKED THIS REPO
 			// Load League betting data
-			LeagueBetting.constructor(client, 100);
+			LeagueBetting.constructor(client);
 			Endpoints.constructor(client);
-			Endpoints.setListener(3000);
 
 			fileName = client.vars.FILE_GAMBLERS;
 			filePath = `${client.paths.DATA}/${fileName}`;
