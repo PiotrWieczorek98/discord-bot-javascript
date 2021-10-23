@@ -62,7 +62,7 @@ class ClientExtended extends Client {
 		this.gambleConfig = {
 			initialCredits: 100,
 			port: 3000,
-			timeLimit: 6000,
+			timeLimit: 60000,
 			fileGamblersPath: `${this.paths.DATA}/${this.vars.FILE_GAMBLERS}`,
 			fileHistoryPath: `${this.paths.DATA}/${this.vars.FILE_BETS}`,
 		};

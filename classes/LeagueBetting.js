@@ -45,9 +45,9 @@ class BettingEntry {
 		this.bettingAllowed = false;
 		if (this.bets.length < 2) {
 			LeagueBetting.cancelBetting(this);
-			const message = `Betting for **${this.summonerNametargetSummoner}**canceled - not enough bets were sent!`;
+			const message = `Betting on **${this.summonerName}** canceled - not enough bets were sent!`;
 			LeagueBetting.client.channels.cache.get(this.channelId).send(message);
-
+			console.log(message);
 		}
 	}
 }
@@ -111,10 +111,12 @@ const LeagueBetting = {
 	 */
 	addBetToJackpot: function(gambler, betValue, targetSummoner, minute) {
 		let message = 'Betting not found!';
+		let summonerName = null;
 
 		for (const liveBet of this.liveBets) {
-			if (liveBet.summonerName == targetSummoner && liveBet.isActive) {
+			if (liveBet.summonerName.toLowerCase() == targetSummoner.toLowerCase() && liveBet.isActive) {
 				const gamblerCredits = this.getGamblerCredits(gambler.id);
+				summonerName = liveBet.summonerName;
 
 				// Check if gambler is registered
 				if (gamblerCredits == undefined) {
@@ -153,7 +155,7 @@ const LeagueBetting = {
 				};
 				liveBet.bets.push(bet);
 
-				message = `**${gambler.displayName}** bets **${betValue}** credits, that **${targetSummoner}** will die in **${ordinalSuffixOf(bet.minute)}** minute.`;
+				message = `**${gambler.displayName}** bets **${betValue}** credits, that **${summonerName}** will die in **${bet.minute}** minute.`;
 
 
 			}
@@ -207,10 +209,10 @@ const LeagueBetting = {
 				}
 
 				if (liveBet.bets.length < 2) {
-					message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute but not enough bets were sent!`;
+					message = `**${targetSummoner}** died in **${deathMinute}** minute but not enough bets were sent!`;
 					this.cancelBetting(liveBet);
 				}
-				message = `**${targetSummoner}** died in **${ordinalSuffixOf(deathMinute)}** minute!`;
+				message = `**${targetSummoner}** died in **${deathMinute}** minute!`;
 
 				// Find winners
 				let winners = '\n💰__**Winners:💰**__\t';

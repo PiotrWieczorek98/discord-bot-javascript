@@ -1,7 +1,7 @@
 const { MessageEmbed } = require('discord.js');
 const LeagueBetting = require('./LeagueBetting');
 const express = require('express');
-const http = require('http');
+// eslint-disable-next-line no-unused-vars
 const ClientExtended = require('./ClientExtended');
 
 const Endpoints = {
@@ -30,12 +30,12 @@ const Endpoints = {
 
 		this.app.post('/game_started', (req, res) => {
 			const data = req.body;
-			const summoner = data.SummonerName;
+			const summonerName = data.SummonerName;
 			const channelId = data.ChannelId;
 
 			const bettingEmbed = new MessageEmbed()
 				.setColor('#0099ff')
-				.setTitle(`💸 Betting for ${summoner}'s death! 💸`)
+				.setTitle(`💸 Betting for ${summonerName}'s death! 💸`)
 				.setDescription('Use /bet to enter the gamble!')
 				.setThumbnail('https://i.imgur.com/qpIocsj.png')
 				.setTimestamp()
@@ -44,19 +44,19 @@ const Endpoints = {
 			// Avoid duplicate
 			let foundDuplicate = false;
 			for (const entry of LeagueBetting.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
+				if (entry.summonerName == summonerName && entry.isActive) {
 					foundDuplicate = true;
 				}
 			}
 
 			if (!foundDuplicate) {
-				LeagueBetting.startBetting(summoner, channelId);
-				console.log('Received /game_started request for ', summoner);
+				LeagueBetting.startBetting(summonerName, channelId);
+				console.log('Received /game_started request for ', summonerName);
 				// SEND CHANNEL MESSAGE
 				this.client.channels.cache.get(channelId).send({ embeds: [bettingEmbed] });
 			}
 			else {
-				console.log('Received duplicate /game_started request for ', summoner);
+				console.log('Received duplicate /game_started request for ', summonerName);
 			}
 
 			res.send({ status: 'ok' });
@@ -66,20 +66,20 @@ const Endpoints = {
 		this.app.post('/death', (req, res) => {
 			let message = 'Something went wrong!';
 			const data = req.body;
-			const summoner = data.VictimName;
+			const summonerName = data.VictimName;
 
 			let foundBetting = false;
 			for (const entry of LeagueBetting.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
+				if (entry.summonerName == summonerName && entry.isActive) {
 					foundBetting = true;
 					const time = parseInt(data.EventTime);
 					const minute = (time / 60).toFixed(2);
-					message = LeagueBetting.endBetting(summoner, minute);
+					message = LeagueBetting.endBetting(summonerName, minute);
 
 					// SEND CHANNEL MESSAGE
 					const bettingEmbed = new MessageEmbed()
 						.setColor('#0099ff')
-						.setTitle(`💸 ${summoner}  died! 💸`)
+						.setTitle(`💸 ${summonerName}  died! 💸`)
 						.setDescription(message)
 						.setThumbnail('https://i.imgur.com/qpIocsj.png')
 						.setTimestamp()
@@ -90,7 +90,7 @@ const Endpoints = {
 			}
 
 			if (!foundBetting) {
-				message = `Received false /death request for ${summoner}`;
+				message = `Received false /death request for ${summonerName}`;
 			}
 
 			console.log(message);
@@ -100,18 +100,18 @@ const Endpoints = {
 
 		this.app.post('/game_ended', (req, res) => {
 			const data = req.body;
-			const summoner = data.VictimName;
+			const summonerName = data.VictimName;
 
 			for (const entry of LeagueBetting.liveBets) {
-				if (entry.summonerName == summoner && entry.isActive) {
-					const message = LeagueBetting.endBetting(summoner, -1);
+				if (entry.summonerName == summonerName && entry.isActive) {
+					const message = LeagueBetting.endBetting(summonerName, -1);
 
 					// SEND CHANNEL MESSAGE
 					this.client.channels.cache.get(entry.channelId).send(message);
 				}
 			}
 
-			console.log('Received /death request for ', summoner);
+			console.log('Received /death request for ', summonerName);
 			res.send({ status: 'ok' });
 		});
 
