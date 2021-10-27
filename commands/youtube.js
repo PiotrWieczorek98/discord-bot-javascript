@@ -62,7 +62,10 @@ module.exports = {
 			type: 'video',
 		};
 
-		const videos = await search(phrase.replace(/<(.+)>/g, '$1'), opts);
+		let videos =null;
+		try{
+			videos = await search(phrase.replace(/<(.+)>/g, '$1'), opts);
+		}
 		video = videos.results[0];
 
 		if (!video) {

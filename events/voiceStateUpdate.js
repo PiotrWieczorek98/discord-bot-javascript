@@ -24,7 +24,7 @@ module.exports = {
 				return;
 			}
 
-
+			const client = newState.client;
 			// const client = guild.client;
 			// client.autoUploadSoundChannel.set(guild.id, null);
 

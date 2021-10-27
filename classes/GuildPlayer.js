@@ -1,6 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 const GuildQueue = require('./GuildQueue');
 // eslint-disable-next-line no-unused-vars
+const { Interaction } = require('discord.js');
+// eslint-disable-next-line no-unused-vars
 const { createAudioResource, AudioPlayerStatus, AudioPlayer, StreamType } = require('@discordjs/voice');
 const { AudioSourceYoutube, AudioSourceLocal } = require('./AudioSource');
 const playDl = require('play-dl') ;
@@ -30,8 +32,17 @@ class GuildPlayer {
 			}
 
 			if (newSource instanceof AudioSourceYoutube) {
-				const stream = await playDl.stream(newSource.url);
-				resource = createAudioResource(stream.stream, { inputType : stream.type });
+				try {
+					const stream = await playDl.stream(newSource.url);
+					resource = createAudioResource(stream.stream, { inputType : stream.type });
+				}
+				catch (er) {
+					console.error(er);
+					message = 'Error caused by play-dl library! Try again.';
+					guildQueue.textChannel.send(message);
+					return;
+				}
+
 			}
 			else if (newSource instanceof AudioSourceLocal) {
 				resource = createAudioResource(newSource.path, { inputType: StreamType.Arbitrary });

@@ -4,7 +4,6 @@ const { GuildMember } = require('discord.js');
 const ClientExtended = require('./ClientExtended');
 const Azure = require('./Azure');
 const GuildDataManager = require('./GuildDataManager');
-const ordinalSuffixOf = require('../helpers/ordinalSuffixOf');
 const wait = require('../helpers/wait');
 
 // ------------------------------------------------------------------------------------
