@@ -115,11 +115,12 @@ const Endpoints = {
 			res.send({ status: 'ok' });
 		});
 
-		this.app.post('/ping', (req, res) => {
-			const data = req.body;
+		this.app.get('/ping', (req, res) => {
+			let data = req.body;
+			data ??= { status: 'ok' };
 
 			console.log('Received /ping request for ', data);
-			res.send(data ?? { status: 'ok' });
+			res.send(data);
 		});
 
 		const listeningPort = process.env.PORT || port;
