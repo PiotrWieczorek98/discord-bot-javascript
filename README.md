@@ -1,5 +1,4 @@
-# Introducing BOI THE BOT JavaScript edition
-## Now with less garbage code! 🙍🏿‍♂️🔫👮🏻‍♂️
+# Abandoned - moved to TypeScript: https://github.com/PiotrWieczorek98/discord-bot-typescript
 
 ![Alt Text](https://c.tenor.com/u_uk_vEg_QIAAAAd/cute-dog.gif)
 

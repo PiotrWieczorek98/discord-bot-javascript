@@ -63,7 +63,7 @@ class GuildPlayer {
 	/**
      * Play audio from youtube video
      * @param {Interaction} interaction
-     * @param {*} guildQueue
+     * @param {GuildQueue} guildQueue
 	 * @param {String} source Either 'youtube' or 'soundList'
      */
 	static async playAudio(interaction, guildQueue) {
